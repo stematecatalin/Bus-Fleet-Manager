@@ -1,0 +1,67 @@
+{% extends "core/base.html" %}
+
+{% block title %}AutoTrans - Rute pe Drum{% endblock %}
+
+{% block content %}
+
+<!-- 1. Leaflet Core -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- 2. Leaflet Routing Machine (Plugin-ul pentru drumuri) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h1 class="display-4 fw-bold text-dark mt-3">Traseu AutoTrans</h1>
+        <p class="text-muted">Ruta optimă calculată pe străzile din București.</p>
+    </div>
+</div>
+
+<div id="map" class="shadow-lg border border-2 border-white" 
+     style="height: 550px; width: 100%; border-radius: 20px;"></div>
+
+<script>
+    // Inițializăm harta
+    var map = L.map('map').setView([44.436, 26.090], 13); 
+
+    // Fundalul curat (CartoDB)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CartoDB'
+    }).addTo(map);
+
+    // Datele de la Django
+    var statii = {{ statii_json|safe }};
+   
+    // Transformăm stațiile în "Waypoints" pentru motorul de navigație
+    var puncteDeTrecere = statii.map(function(s) {
+        return L.latLng(s.lat, s.lng);
+    });
+
+    // 3. MAGIA: Desenăm ruta pe DRUM
+    var control = L.Routing.control({
+        waypoints: puncteDeTrecere,
+        routeWhileDragging: false,
+        addWaypoints: false, // Nu lăsăm utilizatorul să schimbe ruta
+        draggableWaypoints: false,
+        show: false, // Ascundem panoul cu instrucțiuni text (e cam urât)
+        lineOptions: {
+            styles: [{ color: '#2E7D32', opacity: 0.8, weight: 6 }]
+        },
+        createMarker: function(i, wp) {
+            // Personalizăm markerul ca să arate numele stației
+            return L.marker(wp.latLng).bindPopup("<b>" + statii[i].nume + "</b>");
+        }
+    }).addTo(map);
+
+</script>
+
+<style>
+    /* Ascundem chenarul alb cu instrucțiuni de condus care apare implicit */
+    .leaflet-routing-container {
+        display: none;
+    }
+</style>
+
+{% endblock %}

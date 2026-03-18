@@ -1,0 +1,49 @@
+:root{
+--primary:#2E7D32;
+--secondary:#F5F5F5;
+--text:#222;
+}
+@keyframes gradient-move{
+    0%{ background-position: 0% 50%;}
+    50%{ background-position: 100% 50%;}
+    100%{ background-position: 0% 50%;}
+}
+.navbar {
+    background: #419140;
+    background: linear-gradient(-45deg, rgba(65, 145, 64, 1) 0%, rgba(58, 133, 108, 1) 100%);
+    background-size:400% 400%;
+    animation: gradient-move 15s ease infinite;
+}
+
+/* --- REPARARE TOTALA BUTON LOGIN --- */
+
+.login-btn {
+    transition: all .2s ease-in-out;
+    cursor: pointer;
+}
+
+/* Resetam tot grupul sa foloseasca ACELASI ALB (cel de la Bootstrap) */
+.login-btn .btn-light, 
+.login-btn .btn-light:hover, 
+.login-btn .btn-light:active,
+.login-btn .login-icon-wrapper {
+    background-color: #f8f9fa !important; /* Griul oficial Bootstrap btn-light */
+    border-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+/* Scoatem orice umbra sau bordura care ar putea crea diferente */
+.login-btn .login-icon-wrapper {
+    border: none !important;
+}
+
+/* SINGURA regula de inegrire pentru tot grupul (text + cerc + iconita) */
+.login-btn:hover {
+    filter: brightness(0.90); /* Inegrim totul uniform (buton + cerc) cu 10% */
+
+}
+
+.login-btn:active {
+    filter: brightness(0.80); 
+    transform: scale(0.98);
+}
