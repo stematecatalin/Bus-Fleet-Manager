@@ -1,0 +1,117 @@
+{% extends "core/base.html" %}
+
+{% block title %}AutoTrans - Caută Rute{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-dark">Caută Ruta Ta</h1>
+            <p class="text-muted fs-5">Introdu stația de plecare și cea de sosire pentru a găsi cursele disponibile.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-5" style="border-radius: 20px;">
+        <div class="card-body p-4">
+            <form method="GET" action="{% url 'route_search' %}" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="departure" class="form-label fw-bold">Plecare din:</label>
+                    <select name="departure" id="departure" class="form-select rounded-pill">
+                        <option value="">Alege stația...</option>
+                        {% for station in stations %}
+                            <option value="{{ station.id }}" {% if departure == station.id|stringformat:"s" %}selected{% endif %}>
+                                {{ station.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="arrival" class="form-label fw-bold">Sosire la:</label>
+                    <select name="arrival" id="arrival" class="form-select rounded-pill">
+                        <option value="">Alege stația...</option>
+                        {% for station in stations %}
+                            <option value="{{ station.id }}" {% if arrival == station.id|stringformat:"s" %}selected{% endif %} data-original-name="{{ station.name }}">
+                                {{ station.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
+                        <i class="bi bi-search me-2"></i> Caută
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('departure').addEventListener('change', function() {
+            const departureId = this.value;
+            const arrivalSelect = document.getElementById('arrival');
+            
+            if (!departureId) {
+                // Reset names if no departure selected
+                Array.from(arrivalSelect.options).forEach(option => {
+                    if (option.value) {
+                        option.textContent = option.getAttribute('data-original-name');
+                    }
+                });
+                return;
+            }
+
+            fetch(`/api/arrival-counts/?departure_id=${departureId}`)
+                .then(response => response.json())
+                .then(data => {
+                    Array.from(arrivalSelect.options).forEach(option => {
+                        if (option.value) {
+                            const originalName = option.getAttribute('data-original-name');
+                            const count = data[option.value] || 0;
+                            option.textContent = `${originalName} (${count} rute)`;
+                            
+                            // Opțional: putem dezactiva opțiunile cu 0 rute
+                            // option.disabled = (count === 0);
+                        }
+                    });
+                });
+        });
+    </script>
+
+    {% if departure and arrival %}
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-4">Rezultate căutare</h3>
+                {% if routes %}
+                    <div class="list-group shadow-sm">
+                        {% for item in routes %}
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-4 border-start-0 border-end-0 border-top-0 mb-2 shadow-sm rounded">
+                                <div>
+                                    <h5 class="mb-1 fw-bold text-primary">Rută #{{ item.route.id }}</h5>
+                                    <p class="mb-0 text-muted">
+                                        <i class="bi bi-clock me-2"></i>
+                                        Plecare: <strong>{{ item.departure_time|date:"H:i" }}</strong> 
+                                        &nbsp;|&nbsp; 
+                                        Sosire: <strong>{{ item.arrival_time|date:"H:i" }}</strong>
+                                    </p>
+                                    <small class="text-secondary">
+                                        Autobuz: {{ item.route.bus.brand }} {{ item.route.bus.model }} ({{ item.route.bus.license_plate }})
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success fs-6 rounded-pill mb-2 d-block">{{ item.route.total_distance }} km</span>
+                                    <a href="/" class="btn btn-outline-primary btn-sm rounded-pill">Vezi pe hartă</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info rounded-4 p-4 text-center">
+                        <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                        Nu am găsit nicio rută disponibilă între aceste stații.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
