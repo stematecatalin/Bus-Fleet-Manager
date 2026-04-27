@@ -1,8 +1,37 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 import json
-from .models import Station, Route, RouteStation
+from .models import Station, Route, RouteStation, Ticket
 from django.db.models import Q
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from decimal import Decimal
+
+# ... rest of existing views ...
+
+@login_required
+def buy_ticket(request, route_id):
+    route = get_object_or_404(Route, id=route_id)
+    
+    if request.method == "POST":
+        # Verificăm dacă autobuzul este disponibil
+        if not route.bus or route.bus.status != 'active':
+            messages.error(request, "Ne pare rău, dar biletul nu poate fi achiziționat deoarece autobuzul pentru această rută nu este disponibil momentan.")
+            return redirect('route_detail', route_id=route.id)
+
+        # In a real app, you'd handle payment here.
+        price = Decimal(route.total_distance) * Decimal('0.5')
+        
+        ticket = Ticket.objects.create(
+            client=request.user,
+            route=route,
+            price=price
+        )
+        
+        messages.success(request, f"Biletul pentru ruta #{route.id} a fost cumpărat cu succes!")
+        return redirect('route_detail', route_id=route.id)
+    
+    return redirect('route_detail', route_id=route.id)
 
 def index(request):
     route_id = request.GET.get('route_id')
@@ -73,3 +102,13 @@ def get_arrival_counts(request):
                 sid = ls.station_id
                 counts[sid] = counts.get(sid, 0) + 1
     return JsonResponse(counts)
+
+def route_detail(request, route_id):
+    route = Route.objects.get(id=route_id)
+    stations = RouteStation.objects.filter(route=route).order_by('order')
+    
+    context = {
+        'route': route,
+        'stations': stations,
+    }
+    return render(request, "core/route_detail.html", context)
