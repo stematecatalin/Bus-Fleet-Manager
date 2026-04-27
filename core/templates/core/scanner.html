@@ -1,0 +1,193 @@
+{% extends "core/base.html" %}
+
+{% block title %}AutoTrans - Scanner Bilete{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <div class="mb-4">
+                <i class="bi bi-person-vcard text-primary" style="font-size: 3rem;"></i>
+                <h1 class="fw-bold mt-2">Scanner Bilete Șofer</h1>
+                <p class="text-muted">Poziționați codul QR al biletului în fața camerei pentru validare.</p>
+            </div>
+
+            <!-- Zona de Scanner -->
+            <div class="card shadow-lg border-0 overflow-hidden" style="border-radius: 25px; background: #f8f9fa; min-height: 400px; position: relative;">
+                <div id="reader" style="width: 100%;"></div>
+                
+                <!-- Fallback UI cand nu merge camera -->
+                <div id="camera-fail-ui" class="p-5 d-none">
+                    <i class="bi bi-camera-video-off fs-1 text-muted mb-3"></i>
+                    <h4>Camera nu poate fi pornită</h4>
+                    <p class="small text-muted">Browserele mobile necesită HTTPS pentru cameră. Folosiți butonul de mai jos pentru a încărca o poză cu biletul.</p>
+                    <label for="qr-file-input" class="btn btn-outline-primary rounded-pill px-4 fw-bold">
+                        <i class="bi bi-image me-2"></i> Alege Poză Bilet
+                    </label>
+                    <input type="file" id="qr-file-input" accept="image/*" class="d-none">
+                </div>
+
+                <div id="scanner-overlay" class="position-absolute top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center" style="background: rgba(25, 135, 84, 0.9); z-index: 10;">
+                    <div class="text-white text-center">
+                        <i class="bi bi-check-circle-fill" style="font-size: 5rem;"></i>
+                        <h2 class="fw-bold mt-3" id="success-name">VALIDAT!</h2>
+                        <p id="success-details"></p>
+                    </div>
+                </div>
+                <!-- ... rest of overlays ... -->
+                <div id="error-overlay" class="position-absolute top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center" style="background: rgba(220, 53, 69, 0.9); z-index: 10;">
+                    <div class="text-white text-center p-4">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 5rem;"></i>
+                        <h2 class="fw-bold mt-3">EROARE</h2>
+                        <p id="error-message" class="fs-5"></p>
+                        <button class="btn btn-outline-light rounded-pill px-4 mt-2" onclick="resetOverlays()">Încearcă din nou</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button id="start-btn" class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+                    <i class="bi bi-camera-fill me-2"></i> Pornire Cameră
+                </button>
+                <a href="{% url 'index' %}" class="btn btn-link text-muted fw-bold ms-2">Înapoi la meniu</a>
+            </div>
+
+            <div id="scan-history" class="mt-5 text-start d-none">
+                <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Istoric Scanări Recente</h5>
+                <div class="list-group shadow-sm" id="history-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audio pentru succes -->
+<audio id="beep-success" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    const html5QrCode = new Html5Qrcode("reader");
+    const startBtn = document.getElementById('start-btn');
+    const successOverlay = document.getElementById('scanner-overlay');
+    const errorOverlay = document.getElementById('error-overlay');
+    const beep = document.getElementById('beep-success');
+    
+    let isScanning = false;
+
+    function resetOverlays() {
+        successOverlay.classList.add('d-none');
+        errorOverlay.classList.add('d-none');
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (!isScanning) return;
+        
+        isScanning = false; // Oprim temporar scanarea pentru a procesa
+        beep.play();
+
+        // Trimitem la server pentru validare
+        fetch('{% url "validate_ticket_api" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ qr_content: decodedText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('success-name').textContent = "VALIDAT: " + data.passenger;
+                document.getElementById('success-details').textContent = "Ruta #" + data.route_id;
+                successOverlay.classList.remove('d-none');
+                
+                addToHistory(data.passenger, true);
+
+                setTimeout(() => {
+                    successOverlay.classList.add('d-none');
+                    isScanning = true;
+                }, 3000);
+            } else {
+                document.getElementById('error-message').textContent = data.message;
+                errorOverlay.classList.remove('d-none');
+                addToHistory(decodedText.substring(0, 20) + "...", false);
+            }
+        })
+        .catch(err => {
+            document.getElementById('error-message').textContent = "Eroare de conexiune la server.";
+            errorOverlay.classList.remove('d-none');
+        });
+    }
+
+    function addToHistory(name, success) {
+        const history = document.getElementById('scan-history');
+        const list = document.getElementById('history-list');
+        history.classList.remove('d-none');
+        
+        const item = document.createElement('div');
+        item.className = `list-group-item d-flex justify-content-between align-items-center border-start border-4 ${success ? 'border-success' : 'border-danger'}`;
+        const time = new Date().toLocaleTimeString();
+        item.innerHTML = `
+            <div>
+                <strong class="${success ? 'text-success' : 'text-danger'}">${name}</strong>
+                <div class="small text-muted">${time}</div>
+            </div>
+            <i class="bi ${success ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'} fs-4"></i>
+        `;
+        list.prepend(item);
+        if (list.children.length > 5) list.removeChild(list.lastChild);
+    }
+
+    // Verificare automata pentru Insecure Context (lipsa HTTPS)
+    window.addEventListener('load', () => {
+        if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            console.warn("Context nesigur detectat. Camera va fi probabil blocata.");
+            document.getElementById('camera-fail-ui').classList.remove('d-none');
+            document.getElementById('camera-fail-ui').querySelector('p').innerHTML = 
+                "<strong>Eroare de securitate:</strong> Browserele mobile permit camera DOAR pe conexiuni HTTPS.<br>Folosiți Ngrok pentru HTTPS sau încărcați o poză cu biletul.";
+            startBtn.classList.add('d-none');
+        }
+    });
+
+    startBtn.addEventListener('click', () => {
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        // Incercam sa pornim camera
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+        .then(() => {
+            isScanning = true;
+            startBtn.classList.add('d-none');
+            document.getElementById('camera-fail-ui').classList.add('d-none');
+        })
+        .catch(err => {
+            console.error("Eroare camera:", err);
+            document.getElementById('camera-fail-ui').classList.remove('d-none');
+            startBtn.classList.add('d-none');
+        });
+    });
+
+    // Logica pentru scanare din fisier (fallback)
+    const fileInput = document.getElementById('qr-file-input');
+    fileInput.addEventListener('change', e => {
+        if (e.target.files.length === 0) return;
+        const imageFile = e.target.files[0];
+        
+        html5QrCode.scanFile(imageFile, true)
+        .then(decodedText => {
+            onScanSuccess(decodedText);
+        })
+        .catch(err => {
+            alert("Nu am găsit niciun cod QR valid în poză. Încercați o poză mai clară.");
+        });
+    });
+</script>
+
+<style>
+    #reader video {
+        border-radius: 25px;
+        object-fit: cover;
+    }
+    #reader__scan_region {
+        background: white !important;
+    }
+</style>
+{% endblock %}

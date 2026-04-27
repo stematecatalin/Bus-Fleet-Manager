@@ -53,18 +53,22 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <form action="{% url 'buy_ticket' route.id %}" method="POST">
-                            {% csrf_token %}
-                            {% if route.bus and route.bus.status == 'active' %}
-                                <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold">
-                                    <i class="bi bi-ticket-perforated me-2"></i> Cumpară Bilet
-                                </button>
-                            {% else %}
-                                <button type="button" class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
-                                    <i class="bi bi-x-circle me-2"></i> Autobuz Indisponibil
-                                </button>
-                            {% endif %}
-                        </form>
+                        {% if route.departure_time < now %}
+                            <div class="alert alert-warning text-center rounded-pill fw-bold mb-2">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Cursa a plecat deja
+                            </div>
+                            <button class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
+                                <i class="bi bi-cart-x me-2"></i> Cumpărare Indisponibilă
+                            </button>
+                        {% elif route.bus and route.bus.status == 'active' %}
+                            <a href="{% url 'checkout' route.id %}" class="btn btn-success w-100 rounded-pill fw-bold">
+                                <i class="bi bi-cart-plus me-2"></i> Cumpără Bilete
+                            </a>
+                        {% else %}
+                            <button type="button" class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
+                                <i class="bi bi-x-circle me-2"></i> Autobuz Indisponibil
+                            </button>
+                        {% endif %}
                         <a href="{% url 'index' %}?route_id={{ route.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
                             <i class="bi bi-map me-2"></i> Vezi pe hartă
                         </a>

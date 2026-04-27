@@ -1,0 +1,162 @@
+{% extends "core/base.html" %}
+
+{% block title %}AutoTrans - Flota Noastră{% endblock %}
+
+{% block content %}
+<style>
+    .bus-card {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: white;
+    }
+    .bus-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    }
+    .bus-img-container {
+        height: 220px;
+        overflow: hidden;
+        position: relative;
+    }
+    .bus-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    .bus-card:hover .bus-img {
+        transform: scale(1.05);
+    }
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        z-index: 2;
+    }
+    .status-active { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+    .status-service { background: #FFFDE7; color: #F57F17; border: 1px solid #FFF9C4; }
+    .status-defective { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+    
+    .bus-brand { color: #2E7D32; font-weight: 800; font-size: 0.8rem; margin-bottom: 5px; letter-spacing: 1px; }
+    .bus-model { font-weight: 700; font-size: 1.5rem; color: #1A1A1A; }
+    
+    .bus-detail {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #555;
+        margin-bottom: 8px;
+        padding: 6px 12px;
+        background: #F8F9FA;
+        border-radius: 10px;
+        font-size: 0.95rem;
+    }
+    
+    .routes-section {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px dashed #dee2e6;
+    }
+    .route-item {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .route-item i { color: #2E7D32; }
+</style>
+
+<div class="container py-5">
+    <div class="row mb-5 text-center">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="display-4 fw-bold text-dark mb-3">Flota Noastră</h1>
+            <p class="lead text-muted">Autobuzele noastre deservesc multiple rute zilnic. Vezi mai jos unde poți ajunge cu fiecare.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for bus in buses %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card bus-card shadow-sm h-100">
+                <div class="bus-img-container">
+                    {% if bus.image %}
+                        <img src="{{ bus.image.url }}" class="bus-img" alt="{{ bus.brand }} {{ bus.model }}">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop" class="bus-img" alt="Generic Bus">
+                    {% endif %}
+                    
+                    <span class="status-badge 
+                        {% if bus.status == 'active' %}status-active
+                        {% elif bus.status == 'service' %}status-service
+                        {% else %}status-defective{% endif %}">
+                        <i class="bi bi-circle-fill me-1 small"></i> {{ bus.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="bus-brand text-uppercase">{{ bus.brand }}</div>
+                    <h3 class="bus-model mb-3">{{ bus.model }}</h3>
+                    
+                    <div class="bus-detail">
+                        <i class="bi bi-people-fill text-success"></i>
+                        <span><strong>{{ bus.capacity }}</strong> locuri</span>
+                    </div>
+                    
+                    <div class="bus-detail">
+                        <i class="bi bi-card-text text-success"></i>
+                        <span>Nr: <strong>{{ bus.license_plate }}</strong></span>
+                    </div>
+
+                    <div class="routes-section">
+                        <h6 class="fw-bold text-dark mb-2 small text-uppercase">Trasee deservite:</h6>
+                        {% if bus.routes.all %}
+                            {% for route in bus.routes.all|slice:":3" %}
+                                <div class="route-item">
+                                    <i class="bi bi-arrow-right-circle"></i>
+                                    <span>
+                                        {% for rs in route.stations.all %}
+                                            {% if forloop.first %}{{ rs.station.name|truncatechars:12 }}{% endif %}
+                                            {% if forloop.last %} → {{ rs.station.name|truncatechars:12 }}{% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                            {% if bus.routes.all|length > 3 %}
+                                <small class="text-muted ps-4">+ încă {{ bus.routes.all|length|add:"-3" }} trasee</small>
+                            {% endif %}
+                        {% else %}
+                            <small class="text-muted italic">Fără trasee active momentan.</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-auto pt-4">
+                        <div class="d-grid">
+                            <a href="{% url 'route_search' %}?bus_id={{ bus.id }}" class="btn btn-success rounded-pill py-2 fw-bold shadow-sm">
+                                <i class="bi bi-search me-2"></i> Rezervă un loc
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="bg-light d-inline-block p-4 rounded-circle mb-4">
+                <i class="bi bi-bus-front text-muted" style="font-size: 4rem;"></i>
+            </div>
+            <p class="mt-3 text-muted fs-5">Momentan nu există autobuze înregistrate în flotă.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
