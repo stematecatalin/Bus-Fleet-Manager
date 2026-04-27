@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+{% load account %}
+
+{% block title %}Confirmare Email - AutoTrans{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5 mb-5">
+    <div class="col-md-8 col-lg-6 text-center">
+        <div class="card border-0 shadow-sm p-5 rounded-4" style="animation: fadeInUp 0.6s ease-out;">
+            <div class="mb-4">
+                <i class="bi bi-patch-check text-primary" style="font-size: 5rem;"></i>
+            </div>
+            <h2 class="fw-bold mb-3">Confirmă Adresa de Email</h2>
+            
+            {% if confirmation %}
+                {% user_display confirmation.email_address.user as user_display %}
+                <p class="lead text-muted mb-4">Ești la un singur pas distanță! Apasă butonul de mai jos pentru a confirma că adresa <strong>{{ confirmation.email_address.email }}</strong> îți aparține.</p>
+                
+                <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm">
+                            <i class="bi bi-check2-all me-2"></i> Activează contul meu
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <p class="lead text-muted mb-4">Acest link de confirmare a expirat sau este invalid. Te rugăm să soliciți un link nou.</p>
+                <div class="d-grid">
+                    <a href="{% url 'account_email' %}" class="btn btn-outline-secondary rounded-pill px-4">Solicită link nou</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

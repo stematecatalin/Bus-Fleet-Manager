@@ -1,0 +1,9 @@
+Bună ziua,
+
+Vă mulțumim că ați ales să vă înregistrați pe platforma AutoTrans.
+
+Pentru a vă activa contul, vă rugăm să accesați următorul link:
+{{ activate_url }}
+
+Călătorie plăcută,
+Echipa AutoTrans

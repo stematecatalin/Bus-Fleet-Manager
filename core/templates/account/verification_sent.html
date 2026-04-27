@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}Verificare Email - AutoTrans{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5 mb-5">
+    <div class="col-md-8 col-lg-6 text-center">
+        <div class="card border-0 shadow-sm p-5 rounded-4" style="animation: fadeInUp 0.6s ease-out;">
+            <div class="mb-4">
+                <i class="bi bi-envelope-paper-heart text-success" style="font-size: 5rem;"></i>
+            </div>
+            <h2 class="fw-bold mb-3">Confirmă-ți adresa de email!</h2>
+            <p class="lead text-muted mb-4">Ți-am trimis un link de confirmare. Te rugăm să verifici inbox-ul (și folderul Spam) pentru a-ți activa contul și a începe să călătorești cu noi.</p>
+
+            <div class="mt-4">
+                <a href="{% url 'signin' %}" class="btn btn-success rounded-pill px-4 fw-bold">Înapoi la autentificare</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
