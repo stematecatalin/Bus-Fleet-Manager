@@ -5,8 +5,12 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 def index(request):
-    # ... (codul anterior neschimbat)
-    ruta_obj = Route.objects.first()
+    route_id = request.GET.get('route_id')
+    if route_id:
+        ruta_obj = Route.objects.filter(id=route_id).first()
+    else:
+        ruta_obj = Route.objects.first()
+        
     statii_data = []
     if ruta_obj:
         route_stations = RouteStation.objects.filter(route=ruta_obj).order_by('order')
