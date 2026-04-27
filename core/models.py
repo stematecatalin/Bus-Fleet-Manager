@@ -29,6 +29,7 @@ class User(AbstractUser):
     first_name = models.CharField("Prenume", max_length=150)
     last_name = models.CharField("Nume", max_length=150)
     phone_number = models.CharField("Telefon", max_length=15)
+    address = models.CharField("Adresă", max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
