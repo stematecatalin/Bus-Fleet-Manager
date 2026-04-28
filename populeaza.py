@@ -527,7 +527,7 @@ def populate():
     #1. Statia 1: Pitesti
     RouteStation.objects.create(
         route=ruta_retur_arges,
-        station=st_pitesti,  # Găsită anterior în script
+        station=st_pitesti,
         order=1,
         departure_time=ora_plecare_retur_arges
     )
