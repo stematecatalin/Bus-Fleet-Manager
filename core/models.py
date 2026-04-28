@@ -175,12 +175,14 @@ class Ticket(models.Model):
     client = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tickets")
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="tickets")
 
+    passenger_name = models.CharField("Nume Pasager", max_length=255, default="Nespecificat")
     price = models.DecimalField("Preț", max_digits=6, decimal_places=2)
     purchase_date = models.DateTimeField("Data cumpărării", auto_now_add=True)
+    is_boarded = models.BooleanField("Îmbarcat", default=False)
 
     class Meta:
         verbose_name = "Bilet"
         verbose_name_plural = "Bilete"
 
     def __str__(self):
-        return f"Bilet {self.id}"
+        return f"Bilet {self.id} - {self.passenger_name} ({'Îmbarcat' if self.is_boarded else 'Așteptare'})"

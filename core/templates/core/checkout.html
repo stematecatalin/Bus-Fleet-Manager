@@ -1,0 +1,151 @@
+{% extends "core/base.html" %}
+
+{% block title %}AutoTrans - Finalizare Comandă{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow border-0" style="border-radius: 20px;">
+                <div class="card-body p-5">
+                    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-cart-check me-2"></i>Finalizare Comandă</h2>
+                    <hr class="mb-5">
+
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-primary mb-3">Rezumat Rută</h5>
+                            <p class="mb-1"><strong>Ruta:</strong> #{{ route.id }}</p>
+                            <p class="mb-1"><strong>De la:</strong> {{ route.stations.first.station.name }}</p>
+                            <p class="mb-1"><strong>Până la:</strong> {{ route.stations.last.station.name }}</p>
+                            <p class="mb-0"><strong>Data/Ora:</strong> {{ route.departure_time|date:"d M Y, H:i" }}</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <h5 class="fw-bold text-primary mb-3">Preț per bilet</h5>
+                            <h2 class="fw-bold text-dark" id="price-per-ticket">{{ price_per_ticket }} RON</h2>
+                            <h5 class="mt-4">Total: <span id="total-price" class="text-success fw-bold">{{ price_per_ticket }} RON</span></h5>
+                        </div>
+                    </div>
+
+                    <form action="{% url 'process_payment' route.id %}" method="POST" id="payment-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-5">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0">Detalii Pasageri</h5>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-bold" id="add-passenger">
+                                    <i class="bi bi-plus-lg me-1"></i> Adaugă Pasager
+                                </button>
+                            </div>
+                            
+                            <div id="passengers-container">
+                                <div class="passenger-row mb-3 bg-light p-3 rounded-3 position-relative">
+                                    <label class="form-label fw-bold small text-uppercase">Nume Pasager 1</label>
+                                    <input type="text" name="passenger_names[]" class="form-control rounded-pill px-4" placeholder="Nume Complet" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-5">
+                        
+                        <h5 class="fw-bold mb-4">Informații Plată (Simulare)</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="card_name" class="form-label">Nume pe card</label>
+                                <input type="text" class="form-control rounded-pill px-4" id="card_name" placeholder="EX: ION POPESCU" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="card_number" class="form-label">Număr card</label>
+                                <input type="text" class="form-control rounded-pill px-4" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-5">
+                            <div class="col-md-6 mb-3">
+                                <label for="expiry" class="form-label">Dată expirare</label>
+                                <input type="text" class="form-control rounded-pill px-4" id="expiry" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cvv" class="form-label">CVV</label>
+                                <input type="password" class="form-control rounded-pill px-4" id="cvv" placeholder="***" maxlength="3" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold py-3 shadow-sm">
+                                <i class="bi bi-shield-check me-2"></i> Confirmă și Plătește
+                            </button>
+                            <a href="{% url 'route_detail' route.id %}" class="btn btn-link text-muted fw-bold">Anulează tranzacția</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <p class="text-muted small"><i class="bi bi-lock-fill me-1"></i> Aceasta este o pagină de plată simulată pentru un proiect școlar.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const pricePerTicket = parseFloat("{{ price_per_ticket }}");
+    const container = document.getElementById('passengers-container');
+    const addButton = document.getElementById('add-passenger');
+    const totalPriceDisplay = document.getElementById('total-price');
+
+    function updateTotalPrice() {
+        const count = container.querySelectorAll('.passenger-row').length;
+        const total = (count * pricePerTicket).toFixed(2);
+        totalPriceDisplay.textContent = total + ' RON';
+    }
+
+    addButton.addEventListener('click', function() {
+        const passengerCount = container.querySelectorAll('.passenger-row').length + 1;
+        const newRow = document.createElement('div');
+        newRow.className = 'passenger-row mb-3 bg-light p-3 rounded-3 position-relative';
+        newRow.innerHTML = `
+            <label class="form-label fw-bold small text-uppercase">Nume Pasager ${passengerCount}</label>
+            <div class="d-flex gap-2">
+                <input type="text" name="passenger_names[]" class="form-control rounded-pill px-4" placeholder="Nume Complet" required>
+                <button type="button" class="btn btn-danger btn-sm rounded-circle remove-passenger" style="width: 38px; height: 38px;">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        updateTotalPrice();
+
+        newRow.querySelector('.remove-passenger').addEventListener('click', function() {
+            newRow.remove();
+            reorderLabels();
+            updateTotalPrice();
+        });
+    });
+
+    function reorderLabels() {
+        const rows = container.querySelectorAll('.passenger-row');
+        rows.forEach((row, index) => {
+            row.querySelector('label').textContent = `Nume Pasager ${index + 1}`;
+        });
+    }
+
+    // Card formatting
+    document.getElementById('card_number').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        let formattedValue = '';
+        for (let i = 0; i < value.length; i++) {
+            if (i > 0 && i % 4 === 0) formattedValue += ' ';
+            formattedValue += value[i];
+        }
+        e.target.value = formattedValue;
+    });
+
+    document.getElementById('expiry').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 2) {
+            e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        } else {
+            e.target.value = value;
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "core/base.html" %}
+
+{% block title %}AutoTrans - Panou Șofer{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold text-dark">Bun venit, {{ driver.user.first_name }}!</h1>
+            <p class="text-muted fs-5">Gestionați cursele alocate și validați biletele pasagerilor.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'ticket_scanner' %}" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm fw-bold">
+                <i class="bi bi-qr-code-scan me-2"></i> Deschide Scanner
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-primary text-white" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h6 class="text-uppercase small fw-bold opacity-75">Curse Total</h6>
+                    <h2 class="display-4 fw-bold mb-0">{{ total_assigned }}</h2>
+                    <i class="bi bi-bus-front position-absolute end-0 bottom-0 mb-3 me-3 opacity-25" style="font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-success text-white" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h6 class="text-uppercase small fw-bold opacity-75">Status Șofer</h6>
+                    <h2 class="fw-bold mb-0">Activ</h2>
+                    <i class="bi bi-person-check position-absolute end-0 bottom-0 mb-3 me-3 opacity-25" style="font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-dark text-white" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <h6 class="text-uppercase small fw-bold opacity-75">Rating Mediu</h6>
+                    <h2 class="fw-bold mb-0">{{ driver.rating }} / 5.0</h2>
+                    <i class="bi bi-star-fill position-absolute end-0 bottom-0 mb-3 me-3 opacity-25" style="font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Routes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 25px;">
+                <div class="card-header bg-white py-4 border-0">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-calendar-event me-2 text-primary"></i>Cursele Mele</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-3">Ruta</th>
+                                    <th class="py-3">Plecare</th>
+                                    <th class="py-3">Destinație</th>
+                                    <th class="py-3">Autobuz</th>
+                                    <th class="py-3">Bilete</th>
+                                    <th class="pe-4 py-3 text-end">Acțiuni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for route in assigned_routes %}
+                                    <tr>
+                                        <td class="ps-4 fw-bold">#{{ route.id }}</td>
+                                        <td>
+                                            <div class="fw-bold">{{ route.departure_time|date:"H:i" }}</div>
+                                            <div class="small text-muted">{{ route.departure_time|date:"d.m.Y" }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{ route.stations.last.station.name }}</div>
+                                            <div class="small text-muted">{{ route.total_distance }} km</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">{{ route.bus.license_plate }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-dark rounded-pill">{{ route.tickets.count }} vândute</span>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            <a href="{% url 'route_detail' route.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                                                Detalii
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <i class="bi bi-info-circle text-muted mb-3" style="font-size: 2rem;"></i>
+                                            <p class="text-muted">Nu aveți nicio cursă alocată momentan.</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
