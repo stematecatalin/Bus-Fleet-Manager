@@ -274,3 +274,44 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"Bilet {self.id} - {self.passenger_name} ({'Îmbarcat' if self.is_boarded else 'Așteptare'})"
+
+    def get_departure_time(self):
+        if not self.start_station:
+            return self.trip.schedule.departure_time
+        
+        from datetime import datetime, date
+        dummy_date = date(2000, 1, 1)
+        departure_dt = datetime.combine(dummy_date, self.trip.schedule.departure_time)
+        
+        rs = RouteStation.objects.filter(route=self.trip.schedule.route, station=self.start_station).first()
+        if rs:
+            return (departure_dt + rs.time_from_start).time()
+        return self.trip.schedule.departure_time
+
+    def get_arrival_time(self):
+        if not self.end_station:
+            return None
+        
+        from datetime import datetime, date
+        dummy_date = date(2000, 1, 1)
+        departure_dt = datetime.combine(dummy_date, self.trip.schedule.departure_time)
+        
+        rs = RouteStation.objects.filter(route=self.trip.schedule.route, station=self.end_station).first()
+        if rs:
+            return (departure_dt + rs.time_from_start).time()
+        return None
+
+
+class ContactMessage(models.Model):
+    name = models.CharField("Nume", max_length=100)
+    email = models.EmailField("Email")
+    subject = models.CharField("Subiect", max_length=200)
+    message = models.TextField("Mesaj")
+    created_at = models.DateTimeField("Data trimiterii", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Mesaj Contact"
+        verbose_name_plural = "Mesaje Contact"
+
+    def __str__(self):
+        return f"Mesaj de la {self.name} - {self.subject}"

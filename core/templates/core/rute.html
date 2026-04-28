@@ -38,7 +38,11 @@
                 </div>
                 <div class="col-md-3">
                     <label for="date" class="form-label fw-bold">Data:</label>
-                    <input type="date" name="date" id="date" class="form-control rounded-pill" value="{{ date }}" required>
+                    <input type="date" name="date" id="date" class="form-control rounded-pill shadow-sm" 
+                           style="border: 2px solid #dee2e6; transition: border-color 0.3s;"
+                           onfocus="this.style.borderColor='#0d6efd'" 
+                           onblur="this.style.borderColor='#dee2e6'"
+                           value="{{ date }}" required>
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
@@ -50,39 +54,83 @@
     </div>
 
     <script>
-        document.getElementById('departure').addEventListener('change', function() {
-            const departureId = this.value;
-            const arrivalSelect = document.getElementById('arrival');
+        const departureSelect = document.getElementById('departure');
+        const arrivalSelect = document.getElementById('arrival');
+
+        function updateOptions(changedSelect, otherSelect, paramName) {
+            const selectedId = changedSelect.value;
             
-            if (!departureId) {
-                Array.from(arrivalSelect.options).forEach(option => {
+            if (!selectedId) {
+                // Dacă nu e nimic selectat, resetăm celălalt dropdown la starea inițială
+                Array.from(otherSelect.options).forEach(option => {
                     if (option.value) {
-                        option.textContent = option.getAttribute('data-original-name');
+                        option.textContent = option.getAttribute('data-original-name') || option.textContent;
+                        option.style.display = 'block';
                     }
                 });
                 return;
             }
 
-            fetch(`/api/arrival-counts/?departure_id=${departureId}`)
+            // URL pentru API: /api/arrival-counts/?departure_id=X SAU ?arrival_id=Y
+            fetch(`/api/arrival-counts/?${paramName}=${selectedId}`)
                 .then(response => response.json())
                 .then(data => {
-                    Array.from(arrivalSelect.options).forEach(option => {
+                    Array.from(otherSelect.options).forEach(option => {
                         if (option.value) {
-                            const originalName = option.getAttribute('data-original-name');
+                            const originalName = option.getAttribute('data-original-name') || option.textContent;
+                            if (!option.hasAttribute('data-original-name')) {
+                                option.setAttribute('data-original-name', originalName);
+                            }
+
                             const count = data[option.value] || 0;
-                            option.textContent = `${originalName} (${count} rute)`;
+                            
+                            // 1. Nu permitem A -> A
+                            if (option.value === selectedId) {
+                                option.style.display = 'none';
+                                if (otherSelect.value === option.value) otherSelect.value = '';
+                            } 
+                            // 2. Verificăm dacă există rute
+                            else if (count > 0) {
+                                option.textContent = originalName;
+                                option.style.display = 'block';
+                            } 
+                            else {
+                                option.style.display = 'none';
+                                if (otherSelect.value === option.value) otherSelect.value = '';
+                            }
                         }
                     });
                 });
+        }
+
+        departureSelect.addEventListener('change', function() {
+            updateOptions(departureSelect, arrivalSelect, 'departure_id');
         });
 
-        // Set date to today by default if not set
+        arrivalSelect.addEventListener('change', function() {
+            updateOptions(arrivalSelect, departureSelect, 'arrival_id');
+        });
+
+        // La încărcare, dacă avem deja selecții (din URL), aplicăm filtrele
         window.addEventListener('load', function() {
             const dateInput = document.getElementById('date');
+            const now = new Date();
+            // Formatăm data locală ca YYYY-MM-DD
+            const today = now.getFullYear() + '-' + 
+                          String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                          String(now.getDate()).padStart(2, '0');
+            
+            // Setăm limita minimă întotdeauna
+            dateInput.min = today;
+
+            if (departureSelect.value) {
+                updateOptions(departureSelect, arrivalSelect, 'departure_id');
+            } else if (arrivalSelect.value) {
+                updateOptions(arrivalSelect, departureSelect, 'arrival_id');
+            }
+            
             if (!dateInput.value) {
-                const today = new Date().toISOString().split('T')[0];
                 dateInput.value = today;
-                dateInput.min = today;
             }
         });
     </script>
@@ -94,24 +142,41 @@
                 {% if results %}
                     <div class="list-group shadow-sm">
                         {% for item in results %}
-                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-4 border-start-0 border-end-0 border-top-0 mb-2 shadow-sm rounded">
-                                <div>
-                                    <h5 class="mb-1 fw-bold text-primary">{{ item.trip.schedule.route.name }}</h5>
-                                    <p class="mb-0 text-muted">
-                                        <i class="bi bi-clock me-2"></i>
-                                        Plecare: <strong>{{ item.departure_time|date:"H:i" }}</strong> 
-                                        &nbsp;|&nbsp; 
-                                        Sosire: <strong>{{ item.arrival_time|date:"H:i" }}</strong>
-                                    </p>
-                                    <small class="text-secondary">
-                                        Autobuz: {% if item.trip.bus %}{{ item.trip.bus.brand }} {{ item.trip.bus.model }}{% else %}Nespecificat{% endif %}
-                                    </small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-success fs-6 rounded-pill mb-2 d-block">{{ item.trip.schedule.route.total_distance }} km</span>
-                                    <div class="d-flex flex-column gap-2">
-                                        <a href="{% url 'route_detail' item.trip.id %}?dep={{ item.dep_id }}&arr={{ item.arr_id }}" class="btn btn-primary btn-sm rounded-pill">Rezervă Bilet</a>
-                                        <a href="{% url 'index' %}?route_id={{ item.trip.schedule.route.id }}" class="btn btn-outline-primary btn-sm rounded-pill">Vezi pe hartă</a>
+                            <div class="list-group-item list-group-item-action p-4 border-start-0 border-end-0 border-top-0 mb-3 shadow-sm rounded-4">
+                                <div class="row align-items-center">
+                                    <!-- Info Section -->
+                                    <div class="col">
+                                        <h5 class="mb-1 fw-bold text-primary">
+                                            {{ item.dep_name }} <i class="bi bi-arrow-right mx-1"></i> {{ item.arr_name }}
+                                        </h5>
+                                        <div class="mb-2">
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-signpost-2 me-1"></i> Ruta: {{ item.trip.schedule.route.name }}</span>
+                                        </div>
+                                        <div class="mb-2 text-dark">
+                                            <i class="bi bi-clock me-2 text-primary"></i>
+                                            Plecare: <strong>{{ item.departure_time|date:"H:i" }}</strong> 
+                                            <span class="mx-2 text-muted">|</span> 
+                                            Sosire: <strong>{{ item.arrival_time|date:"H:i" }}</strong>
+                                        </div>
+                                        <div class="small text-secondary">
+                                            <i class="bi bi-bus-front me-1"></i>
+                                            Autobuz: {% if item.trip.bus %}{{ item.trip.bus.brand }} {{ item.trip.bus.model }}{% else %}Nespecificat{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Section -->
+                                    <div class="col-auto text-end ps-4">
+                                        <div class="mb-3">
+                                            <span class="badge bg-success fs-6 rounded-pill px-3">{{ item.trip.schedule.route.total_distance }} km</span>
+                                        </div>
+                                        <div class="d-flex flex-column gap-2">
+                                            <a href="{% url 'route_detail' item.trip.id %}?dep={{ item.dep_id }}&arr={{ item.arr_id }}" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                                <i class="bi bi-cart-plus me-2"></i>Cumpără Bilet
+                                            </a>
+                                            <a href="{% url 'index' %}?route_id={{ item.trip.schedule.route.id }}" class="btn btn-outline-primary rounded-pill px-4 btn-sm">
+                                                <i class="bi bi-map me-2"></i>Vezi Hartă
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

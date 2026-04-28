@@ -9,41 +9,175 @@
     100%{ background-position: 0% 50%;}
 }
 .navbar {
-    background: #419140;
-    background: linear-gradient(-45deg, rgba(65, 145, 64, 1) 0%, rgba(58, 133, 108, 1) 100%);
-    background-size:400% 400%;
-    animation: gradient-move 15s ease infinite;
+    background: #051409; /* Midnight Forest */
+    background: linear-gradient(135deg, #051409 0%, #0c2b16 100%);
+    border-bottom: 1px solid rgba(46, 125, 50, 0.2);
+    z-index: 9999 !important;
+    padding: 12px 0;
 }
 
-/* --- REPARARE TOTALA BUTON LOGIN --- */
+.navbar-brand {
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.02);
+}
+
+.brand-icon {
+    background: rgba(255, 255, 255, 0.1);
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-text-new {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar .container {
+    display: flex;
+    align-items: center; /* Centrare verticală forțată pentru toate elementele */
+}
+
+.nav-link {
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 8px 16px !important;
+    margin: 0 2px;
+    border-radius: 12px;
+    transition: all 0.3s ease !important;
+    display: flex;
+    align-items: center;
+    height: 100%; /* Ocupă toată înălțimea pentru aliniere */
+}
+
+.nav-link:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.brand-text span {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* --- ACCOUNT DROPDOWN MODERNIZATION --- */
 
 .login-btn {
-    transition: all .2s ease-in-out;
-    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
-/* Resetam tot grupul sa foloseasca ACELASI ALB (cel de la Bootstrap) */
-.login-btn .btn-light, 
-.login-btn .btn-light:hover, 
-.login-btn .btn-light:active,
-.login-btn .login-icon-wrapper {
-    background-color: #f8f9fa !important; /* Griul oficial Bootstrap btn-light */
-    border-color: #f8f9fa !important;
-    color: #212529 !important;
+.login-btn .dropdown-toggle::after {
+    display: none !important;
 }
 
-/* Scoatem orice umbra sau bordura care ar putea crea diferente */
-.login-btn .login-icon-wrapper {
+.login-btn .btn-light {
+    background: #ffffff !important;
     border: none !important;
+    padding: 6px 6px 6px 6px !important; /* Ajustat pentru centrare */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+    transition: all 0.3s ease !important;
+    position: relative;
+    z-index: 10002 !important;
+    min-width: 220px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* SINGURA regula de inegrire pentru tot grupul (text + cerc + iconita) */
-.login-btn:hover {
-    filter: brightness(0.90); /* Inegrim totul uniform (buton + cerc) cu 10% */
-
+.user-email-name {
+    flex: 1;
+    text-align: center;
+    margin-left: 40px; /* Compensează lățimea iconiței din dreapta pentru centrare perfectă */
+    font-size: 0.95rem;
 }
 
-.login-btn:active {
-    filter: brightness(0.80); 
-    transform: scale(0.98);
+/* Efect de hover doar când meniul NU este deschis */
+.login-btn:not(.show):hover {
+    transform: translateY(-2px);
+}
+
+.login-btn:hover .btn-light {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+}
+
+.login-icon-wrapper {
+    background: linear-gradient(135deg, #419140 0%, #2e7d32 100%) !important;
+    color: white !important;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.login-icon-wrapper.admin-wrapper {
+    background: #FFD700; /* Fallback */
+    background: linear-gradient(135deg, #FFD700 0%, #FF4500 100%) !important; 
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.5), 0 0 20px rgba(255, 69, 0, 0.4) !important;
+}
+
+/* Dropdown Menu - Seamless Connection */
+.dropdown-menu {
+    border: none !important;
+    border-radius: 25px !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12) !important;
+    padding: 60px 10px 12px 10px !important;
+    margin-top: -52px !important;
+    z-index: 10001 !important;
+    background: #ffffff;
+    width: 100% !important; /* Lățime exactă cât butonul */
+    min-width: 220px !important;
+    border-top-right-radius: 30px !important;
+    border-top-left-radius: 30px !important;
+    overflow: hidden;
+}
+
+.dropdown-item {
+    border-radius: 15px !important;
+    padding: 10px 12px !important;
+    font-weight: 600 !important;
+    color: #444 !important;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    white-space: normal; /* Permite textului lung să se așeze pe mai multe rânduri dacă e cazul */
+}
+
+.dropdown-item i {
+    font-size: 1.1rem;
+    color: #2e7d32;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f7f0 !important;
+    color: #2e7d32 !important;
+    transform: translateX(5px);
+}
+
+.dropdown-item:hover i {
+    transform: scale(1.2);
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: #fff5f5 !important;
+    color: #dc3545 !important;
+}
+
+.dropdown-divider {
+    margin: 8px 10px !important;
+    opacity: 0.08 !important;
 }

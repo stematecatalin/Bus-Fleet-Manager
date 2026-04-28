@@ -4,11 +4,11 @@
 
 {% block content %}
 
-
+<!-- Leaflet CSS & JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-
+<!-- Leaflet Routing Machine -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
@@ -21,56 +21,11 @@
             <a href="/rute/" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-bold text-success shadow-sm fs-5 transition-all">
                 <i class="bi bi-search me-2"></i>Caută Rute
             </a>
-            <a href="/flota/" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-bold fs-5 transition-all">
-                <i class="bi bi-bus-front me-2"></i>Vezi Flota
-            </a>
-        </div>
-    </div>
-
-    <div class="position-absolute opacity-20" style="bottom: -75px; right: 20px; transform: rotate(-10deg); pointer-events: none; z-index: 1;">
-        <i class="bi bi-bus-front-fill" style="font-size: 25rem; position: absolute; top: 0; left: 0; color: #6f42c1;"></i>
-        <i class="bi bi-bus-front text-white" style="font-size: 25rem; position: relative;"></i>
-    </div>
-</div>
-
-
-<div class="row g-4 mb-5 text-center">
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 hover-lift" style="transition: transform 0.3s ease;">
-            <div class="card-body">
-                <div class="d-inline-flex justify-content-center align-items-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 80px; height: 80px;">
-                    <i class="bi bi-clock-history fs-1"></i>
-                </div>
-                <h4 class="fw-bold">Mereu la Timp</h4>
-                <p class="text-muted mb-0">Rutele noastre sunt optimizate pentru a asigura sosiri și plecări punctuale în fiecare zi.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 hover-lift" style="transition: transform 0.3s ease;">
-            <div class="card-body">
-                <div class="d-inline-flex justify-content-center align-items-center bg-success bg-opacity-10 text-success rounded-circle mb-3" style="width: 80px; height: 80px;">
-                    <i class="bi bi-shield-check fs-1"></i>
-                </div>
-                <h4 class="fw-bold">Călătorii Sigure</h4>
-                <p class="text-muted mb-0">Siguranța ta este prioritatea noastră. Flota noastră este verificată și modernizată constant.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 hover-lift" style="transition: transform 0.3s ease;">
-            <div class="card-body">
-                <div class="d-inline-flex justify-content-center align-items-center bg-warning bg-opacity-10 text-warning rounded-circle mb-3" style="width: 80px; height: 80px;">
-                    <i class="bi bi-phone-vibrate fs-1"></i>
-                </div>
-                <h4 class="fw-bold">Rezervări Rapide</h4>
-                <p class="text-muted mb-0">Sistemul nostru digital îți permite să îți rezervi locul și să folosești biletul direct de pe telefon.</p>
-            </div>
         </div>
     </div>
 </div>
 
-
+<!-- Map Section -->
 <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
     <div class="card-header bg-white border-0 pt-5 pb-2 text-center">
         <h3 class="fw-bold text-dark mb-2">Descoperă Rețeaua Noastră</h3>
@@ -78,58 +33,149 @@
     </div>
     <div class="card-body p-4 pt-2">
         <div id="map" class="shadow-sm border border-2 border-light" 
-             style="height: 500px; width: 100%; border-radius: 15px;"></div>
+             style="height: 550px; width: 100%; border-radius: 15px;"></div>
     </div>
 </div>
 
 <script>
-    // Inițializăm harta
-    var map = L.map('map').setView([44.436, 26.090], 13); 
+    var map = L.map('map').setView([44.436, 25.5], 8); 
 
-    // Fundalul curat (CartoDB)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CartoDB'
     }).addTo(map);
 
-    // Datele de la Django (toate rutele)
-    var rute = {{ rute_json|safe }};
-   
-    if (rute && rute.length > 0) {
-        rute.forEach(function(ruta) {
-            // Transformăm stațiile rutei în "Waypoints"
+    var ruteData = {{ rute_json|safe }};
+
+    if (ruteData && ruteData.length > 0) {
+        var allBounds = L.latLngBounds();
+
+        async function incarcaRute(index) {
+            if (index >= ruteData.length) {
+                map.fitBounds(allBounds, {padding: [50, 50]});
+                return;
+            }
+
+            var ruta = ruteData[index];
             var puncteDeTrecere = ruta.statii.map(function(s) {
-                return L.latLng(s.lat, s.lng);
+                var latlng = L.latLng(s.lat, s.lng);
+                allBounds.extend(latlng);
+                return latlng;
             });
 
-            // Desenăm ruta pe DRUM
-            L.Routing.control({
+            // 1. Markere - le punem imediat
+            puncteDeTrecere.forEach(function(p, i) {
+                L.marker(p).addTo(map).bindPopup("<b>" + ruta.statii[i].nume + "</b><br>Ruta: " + ruta.nume);
+            });
+
+            // 2. Linie dreaptă temporară
+            var tempLine = L.polyline(puncteDeTrecere, {
+                color: ruta.culoare,
+                weight: 4,
+                opacity: 0.4,
+                dashArray: '5, 10'
+            }).addTo(map);
+
+            // 3. Încercăm Routing (pe drum)
+            var control = L.Routing.control({
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://routing.openstreetmap.de/routed-car/route/v1',
+                    useHints: false
+                }),
                 waypoints: puncteDeTrecere,
                 routeWhileDragging: false,
                 addWaypoints: false,
                 draggableWaypoints: false,
                 show: false,
+                createMarker: function() { return null; },
                 lineOptions: {
-                    styles: [{ color: ruta.culoare, opacity: 0.7, weight: 6 }]
-                },
-                createMarker: function(i, wp) {
-                    // Marker personalizat cu numele stației și ID-ul rutei
-                    return L.marker(wp.latLng).bindPopup("<b>" + ruta.statii[i].nume + "</b><br><small>" + ruta.nume + "</small>");
+                    styles: [
+                        { color: 'white', opacity: 0.8, weight: 12 },
+                        { color: ruta.culoare, opacity: 1, weight: 6 }
+                    ],
+                    addWaypoints: false
                 }
+            }).on('routesfound', function(e) {
+                map.removeLayer(tempLine);
+                var routes = e.routes;
+                
+                // Aplicăm un mic decalaj (offset) în funcție de index ca să nu se suprapună perfect
+                var offset = index * 0.00008; 
+                var coordinates = routes[0].coordinates.map(function(c) {
+                    return [c.lat + offset, c.lng + offset];
+                });
+
+                // Creăm polilinia vizibilă
+                var realRouteLine = L.polyline(coordinates, {
+                    color: ruta.culoare,
+                    weight: 6,
+                    opacity: 0.8,
+                    interactive: true,
+                    lineJoin: 'round',
+                    pane: 'overlayPane'
+                }).addTo(map);
+
+                // Buffer-ul de click (invizibil, mult mai lat: 30px)
+                var clickBuffer = L.polyline(coordinates, {
+                    color: 'white',
+                    weight: 30,
+                    opacity: 0, // Complet invizibil dar detectabil
+                    interactive: true,
+                    pane: 'overlayPane'
+                }).addTo(map);
+
+                // Efecte de interacțiune
+                function highlightRoute(e) {
+                    realRouteLine.setStyle({ weight: 12, opacity: 1 });
+                    realRouteLine.bringToFront();
+                    // Schimbăm cursorul pe toată harta când suntem pe rută
+                    map.getContainer().style.cursor = 'pointer';
+                }
+
+                function resetRoute(e) {
+                    realRouteLine.setStyle({ weight: 6, opacity: 0.8 });
+                    map.getContainer().style.cursor = '';
+                }
+
+                // Atașăm evenimentele pe ambele (linie și buffer)
+                [realRouteLine, clickBuffer].forEach(function(layer) {
+                    layer.on('mouseover', highlightRoute);
+                    layer.on('mouseout', resetRoute);
+                });
+
+                var popupContent = `
+                    <div style="min-width: 180px; text-align: center; padding: 10px; font-family: sans-serif;">
+                        <h6 style="margin: 0 0 8px 0; font-weight: 800; color: ${ruta.culoare}; font-size: 15px;">${ruta.nume}</h6>
+                        <div style="font-size: 12px; color: #555; margin-bottom: 12px;">Traseu activ AutoTrans</div>
+                        <a href="/rute/" style="background-color: ${ruta.culoare}; color: white; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 12px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            VEZI DETALII
+                        </a>
+                    </div>
+                `;
+
+                realRouteLine.bindPopup(popupContent, { closeButton: false, offset: [0, -5] });
+                clickBuffer.bindPopup(popupContent, { closeButton: false, offset: [0, -5] });
+
+                console.log("Drum optimizat afișat pentru " + ruta.nume);
+                setTimeout(() => { incarcaRute(index + 1); }, 400);
+            }).on('routingerror', function(err) {
+                tempLine.setStyle({ opacity: 0.8, dashArray: null, weight: 6 });
+                tempLine.bindPopup(`
+                    <div class="p-2 text-center">
+                        <h6 class="fw-bold mb-1">${ruta.nume}</h6>
+                        <a href="/rute/" class="btn btn-sm btn-success rounded-pill px-3">Vezi rute</a>
+                    </div>
+                `);
+                setTimeout(() => { incarcaRute(index + 1); }, 100);
             }).addTo(map);
-        });
+        }
+
+        incarcaRute(0);
     }
 </script>
 
 <style>
-    /* Ascundem chenarul alb cu instrucțiuni de condus care apare implicit */
-    .leaflet-routing-container {
-        display: none !important;
-    }
-    
-    /* Hover effect for feature cards */
-    .hover-lift:hover {
-        transform: translateY(-5px);
-    }
+    .leaflet-routing-container { display: none !important; }
+    .hover-lift:hover { transform: translateY(-5px); transition: 0.3s; }
 </style>
 
 {% endblock %}
