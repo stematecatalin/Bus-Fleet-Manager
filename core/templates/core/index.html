@@ -1,26 +1,86 @@
 {% extends "core/base.html" %}
 
-{% block title %}AutoTrans - Rute pe Drum{% endblock %}
+{% block title %}AutoTrans - Acasă{% endblock %}
 
 {% block content %}
 
-<!-- 1. Leaflet Core -->
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- 2. Leaflet Routing Machine (Plugin-ul pentru drumuri) -->
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
-<div class="row mb-4">
-    <div class="col-12 text-center">
-        <h1 class="display-4 fw-bold text-dark mt-3">Traseu AutoTrans</h1>
-        <p class="text-muted">Ruta optimă calculată pe străzile din București.</p>
+<!-- Hero Section -->
+<div class="p-4 p-md-5 mb-5 text-white rounded-4 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, #419140 0%, #2e7d32 100%);">
+    <div class="position-relative py-3 text-center ms-md-2" style="z-index: 2; max-width: 800px;">
+        <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Călătorește cu <span style="font-weight: 900;">AutoTrans</span></h1>
+        <p class="lead mb-4 mx-auto opacity-90 fs-5" style="max-width: 700px; font-weight: 400; text-shadow: 1px 1px 2px rgba(0,0,0,0.15);">Descoperă o rețea de transport modernă, eficientă și mereu la timp. Găsește-ți ruta, rezervă-ți locul și bucură-te de confortul călătoriei.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/rute/" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-bold text-success shadow-sm fs-5 transition-all">
+                <i class="bi bi-search me-2"></i>Caută Rute
+            </a>
+            <a href="/flota/" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-bold fs-5 transition-all">
+                <i class="bi bi-bus-front me-2"></i>Vezi Flota
+            </a>
+        </div>
+    </div>
+
+    <div class="position-absolute opacity-20" style="bottom: -75px; right: 20px; transform: rotate(-10deg); pointer-events: none; z-index: 1;">
+        <i class="bi bi-bus-front-fill" style="font-size: 25rem; position: absolute; top: 0; left: 0; color: #6f42c1;"></i>
+        <i class="bi bi-bus-front text-white" style="font-size: 25rem; position: relative;"></i>
     </div>
 </div>
 
-<div id="map" class="shadow-lg border border-2 border-white" 
-     style="height: 550px; width: 100%; border-radius: 20px;"></div>
+
+<div class="row g-4 mb-5 text-center">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 hover-lift" style="transition: transform 0.3s ease;">
+            <div class="card-body">
+                <div class="d-inline-flex justify-content-center align-items-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-clock-history fs-1"></i>
+                </div>
+                <h4 class="fw-bold">Mereu la Timp</h4>
+                <p class="text-muted mb-0">Rutele noastre sunt optimizate pentru a asigura sosiri și plecări punctuale în fiecare zi.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 hover-lift" style="transition: transform 0.3s ease;">
+            <div class="card-body">
+                <div class="d-inline-flex justify-content-center align-items-center bg-success bg-opacity-10 text-success rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-shield-check fs-1"></i>
+                </div>
+                <h4 class="fw-bold">Călătorii Sigure</h4>
+                <p class="text-muted mb-0">Siguranța ta este prioritatea noastră. Flota noastră este verificată și modernizată constant.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4 hover-lift" style="transition: transform 0.3s ease;">
+            <div class="card-body">
+                <div class="d-inline-flex justify-content-center align-items-center bg-warning bg-opacity-10 text-warning rounded-circle mb-3" style="width: 80px; height: 80px;">
+                    <i class="bi bi-phone-vibrate fs-1"></i>
+                </div>
+                <h4 class="fw-bold">Rezervări Rapide</h4>
+                <p class="text-muted mb-0">Sistemul nostru digital îți permite să îți rezervi locul și să folosești biletul direct de pe telefon.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+    <div class="card-header bg-white border-0 pt-5 pb-2 text-center">
+        <h3 class="fw-bold text-dark mb-2">Descoperă Rețeaua Noastră</h3>
+        <p class="text-muted">Explorează traseele active direct pe hartă.</p>
+    </div>
+    <div class="card-body p-4 pt-2">
+        <div id="map" class="shadow-sm border border-2 border-light" 
+             style="height: 500px; width: 100%; border-radius: 15px;"></div>
+    </div>
+</div>
 
 <script>
     // Inițializăm harta
@@ -31,36 +91,44 @@
         attribution: '&copy; CartoDB'
     }).addTo(map);
 
-    // Datele de la Django
-    var statii = {{ statii_json|safe }};
+    // Datele de la Django (toate rutele)
+    var rute = {{ rute_json|safe }};
    
-    // Transformăm stațiile în "Waypoints" pentru motorul de navigație
-    var puncteDeTrecere = statii.map(function(s) {
-        return L.latLng(s.lat, s.lng);
-    });
+    if (rute && rute.length > 0) {
+        rute.forEach(function(ruta) {
+            // Transformăm stațiile rutei în "Waypoints"
+            var puncteDeTrecere = ruta.statii.map(function(s) {
+                return L.latLng(s.lat, s.lng);
+            });
 
-    // 3. MAGIA: Desenăm ruta pe DRUM
-    var control = L.Routing.control({
-        waypoints: puncteDeTrecere,
-        routeWhileDragging: false,
-        addWaypoints: false, // Nu lăsăm utilizatorul să schimbe ruta
-        draggableWaypoints: false,
-        show: false, // Ascundem panoul cu instrucțiuni text (e cam urât)
-        lineOptions: {
-            styles: [{ color: '#2E7D32', opacity: 0.8, weight: 6 }]
-        },
-        createMarker: function(i, wp) {
-            // Personalizăm markerul ca să arate numele stației
-            return L.marker(wp.latLng).bindPopup("<b>" + statii[i].nume + "</b>");
-        }
-    }).addTo(map);
-
+            // Desenăm ruta pe DRUM
+            L.Routing.control({
+                waypoints: puncteDeTrecere,
+                routeWhileDragging: false,
+                addWaypoints: false,
+                draggableWaypoints: false,
+                show: false,
+                lineOptions: {
+                    styles: [{ color: ruta.culoare, opacity: 0.7, weight: 6 }]
+                },
+                createMarker: function(i, wp) {
+                    // Marker personalizat cu numele stației și ID-ul rutei
+                    return L.marker(wp.latLng).bindPopup("<b>" + ruta.statii[i].nume + "</b><br><small>" + ruta.nume + "</small>");
+                }
+            }).addTo(map);
+        });
+    }
 </script>
 
 <style>
     /* Ascundem chenarul alb cu instrucțiuni de condus care apare implicit */
     .leaflet-routing-container {
-        display: none;
+        display: none !important;
+    }
+    
+    /* Hover effect for feature cards */
+    .hover-lift:hover {
+        transform: translateY(-5px);
     }
 </style>
 

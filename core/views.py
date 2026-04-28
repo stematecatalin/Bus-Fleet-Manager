@@ -348,25 +348,32 @@ def validate_ticket_api(request):
     return JsonResponse({'success': False, 'message': 'Metodă nepermisă.'})
 
 def index(request):
-    route_id = request.GET.get('route_id')
-    if route_id:
-        ruta_obj = Route.objects.filter(id=route_id).first()
-    else:
-        ruta_obj = Route.objects.first()
-        
-    statii_data = []
-    if ruta_obj:
-        route_stations = RouteStation.objects.filter(route=ruta_obj).order_by('order')
+    rute_active = Route.objects.all()
+    toate_rutele_data = []
+    
+    # Paletă de culori pentru rute
+    culori = ['#0d6efd', '#198754', '#dc3545', '#ffc107', '#6610f2', '#fd7e14', '#20c997', '#0dcaf0']
+    
+    for i, ruta in enumerate(rute_active):
+        statii_ruta = []
+        route_stations = RouteStation.objects.filter(route=ruta).order_by('order')
         for rs in route_stations:
-            statii_data.append({
-                "id": rs.station.id,
+            statii_ruta.append({
                 "nume": rs.station.name,
                 "lat": rs.station.latitude,
                 "lng": rs.station.longitude
             })
+        
+        if statii_ruta:
+            toate_rutele_data.append({
+                "id": ruta.id,
+                "nume": f"Ruta {ruta.id}",
+                "culoare": culori[i % len(culori)],
+                "statii": statii_ruta
+            })
+            
     context = {
-        'statii_json': json.dumps(statii_data),
-        'ruta_obj': ruta_obj
+        'rute_json': json.dumps(toate_rutele_data),
     }
     return render(request, "core/index.html", context)
 
@@ -378,7 +385,6 @@ def route_search(request):
     now = timezone.now()
     
     if departure and arrival:
-        # Filtrăm doar rutele care au plecarea după momentul actual
         routes_with_departure = RouteStation.objects.filter(
             station_id=departure,
             route__departure_time__gte=now
@@ -409,10 +415,8 @@ def get_arrival_counts(request):
     departure_id = request.GET.get('departure_id')
     counts = {}
     if departure_id:
-        # Găsim toate aparițiile stației de plecare în rute
         rs_deps = RouteStation.objects.filter(station_id=departure_id)
         for rs_dep in rs_deps:
-            # Pentru fiecare rută care trece prin plecare, vedem ce stații urmează
             later_stations = RouteStation.objects.filter(
                 route=rs_dep.route,
                 order__gt=rs_dep.order
