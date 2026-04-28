@@ -1,7 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import ValidationError
-from .models import User, Employee, Bus, Route, Ticket, Station, RouteStation
+from .models import User, Employee, Bus, Route, Ticket, Station, RouteStation, ContactMessage
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'subject', 'created_at')
+    search_fields = ('name', 'email', 'subject', 'message')
+    readonly_fields = ('created_at',)
 from django.utils.html import format_html
 from django.db.models import Count
 from django.db.models.functions import TruncDay

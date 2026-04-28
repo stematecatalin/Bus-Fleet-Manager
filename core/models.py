@@ -186,3 +186,18 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"Bilet {self.id} - {self.passenger_name} ({'Îmbarcat' if self.is_boarded else 'Așteptare'})"
+
+
+class ContactMessage(models.Model):
+    name = models.CharField("Nume", max_length=100)
+    email = models.EmailField("Email")
+    subject = models.CharField("Subiect", max_length=200)
+    message = models.TextField("Mesaj")
+    created_at = models.DateTimeField("Data trimiterii", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Mesaj Contact"
+        verbose_name_plural = "Mesaje Contact"
+
+    def __str__(self):
+        return f"Mesaj de la {self.name} - {self.subject}"
