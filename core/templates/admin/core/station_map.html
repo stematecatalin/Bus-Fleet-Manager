@@ -1,0 +1,75 @@
+<!-- Adăugăm politica de referrer pentru a evita blocajele de acces la hărți -->
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" referrerpolicy="no-referrer-when-downgrade" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" referrerpolicy="no-referrer-when-downgrade"></script>
+
+<div id="map-container" style="width: 100%;">
+    <div id="map" style="height: 400px; width: 100%; margin-bottom: 20px; border-radius: 8px; border: 2px solid var(--primary);"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var defaultLat = 44.4268; // București
+        var defaultLng = 26.1025;
+        
+        var latInput = document.getElementById('id_latitude');
+        var lngInput = document.getElementById('id_longitude');
+        var nameInput = document.getElementById('id_name');
+        
+        var initialLat = parseFloat(latInput.value) || defaultLat;
+        var initialLng = parseFloat(lngInput.value) || defaultLng;
+
+        var map = L.map('map').setView([initialLat, initialLng], 6);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        var marker;
+
+        function updateAddress(lat, lng) {
+            // Apelăm API-ul Nominatim pentru a afla adresa
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    var address = data.display_name;
+                    // Extragem ceva mai scurt (oraș sau stradă)
+                    var shortAddress = data.address.road || data.address.city || data.address.town || data.address.village || "Locație necunoscută";
+                    
+                    if (marker) {
+                        marker.bindPopup("<b>" + shortAddress + "</b><br><span style='font-size:10px'>" + address + "</span>").openPopup();
+                    }
+
+                    // Completăm automat numele stației dacă e gol
+                    if (nameInput && !nameInput.value) {
+                        nameInput.value = shortAddress;
+                    }
+                })
+                .catch(err => console.error("Geocoding error:", err));
+        }
+
+        if (latInput.value && lngInput.value) {
+            marker = L.marker([initialLat, initialLng]).addTo(map);
+            map.setZoom(15);
+            updateAddress(initialLat, initialLng);
+        }
+
+        map.on('click', function(e) {
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+
+            if (marker) {
+                marker.setLatLng(e.latlng);
+            } else {
+                marker = L.marker(e.latlng).addTo(map);
+            }
+
+            latInput.value = lat;
+            lngInput.value = lng;
+            
+            updateAddress(lat, lng);
+        });
+    });
+</script>

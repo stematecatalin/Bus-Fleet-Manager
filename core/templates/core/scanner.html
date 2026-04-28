@@ -7,9 +7,16 @@
     <div class="row justify-content-center">
         <div class="col-lg-8 text-center">
             <div class="mb-4">
-                <i class="bi bi-person-vcard text-primary" style="font-size: 3rem;"></i>
-                <h1 class="fw-bold mt-2">Scanner Bilete Șofer</h1>
-                <p class="text-muted">Poziționați codul QR al biletului în fața camerei pentru validare.</p>
+                <i class="bi bi-qr-code-scan text-primary" style="font-size: 3rem;"></i>
+                <h1 class="fw-bold mt-2">Scanner Bilete</h1>
+                {% if trip %}
+                    <div class="badge bg-primary fs-6 rounded-pill px-3 py-2 mb-2">
+                        CURSA #{{ trip.id }} | {{ trip.schedule.route.name }}
+                    </div>
+                    <p class="text-muted">Se validează bilete pentru ora <strong>{{ trip.schedule.departure_time|date:"H:i" }}</strong></p>
+                {% else %}
+                    <p class="text-muted">Poziționați codul QR al biletului în fața camerei pentru validare.</p>
+                {% endif %}
             </div>
 
             <!-- Zona de Scanner -->
@@ -91,13 +98,16 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token }}'
             },
-            body: JSON.stringify({ qr_content: decodedText })
+            body: JSON.stringify({ 
+                qr_content: decodedText,
+                trip_id: "{{ trip.id|default:'' }}"
+            })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 document.getElementById('success-name').textContent = "VALIDAT: " + data.passenger;
-                document.getElementById('success-details').textContent = "Ruta #" + data.route_id;
+                document.getElementById('success-details').textContent = "Cursa #" + data.trip_id;
                 successOverlay.classList.remove('d-none');
                 
                 addToHistory(data.passenger, true);

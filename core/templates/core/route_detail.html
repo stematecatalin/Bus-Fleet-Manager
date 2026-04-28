@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block title %}AutoTrans - Detalii Rută #{{ route.id }}{% endblock %}
+{% block title %}AutoTrans - Detalii Cursă #{{ trip.id }}{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -17,16 +17,17 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{% url 'route_search' %}">Căutare Rute</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Detalii Rută #{{ route.id }}</li>
+                    <li class="breadcrumb-item active" aria-current="page">Detalii Cursă #{{ trip.id }}</li>
                 </ol>
             </nav>
-            <h1 class="display-5 fw-bold text-dark">Detalii Rută #{{ route.id }}</h1>
+            <h1 class="display-5 fw-bold text-dark">{{ trip.schedule.route.name }}</h1>
+            <h3 class="text-muted">Data: {{ trip.date|date:"d M Y" }}</h3>
             <hr class="my-4">
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Route Summary -->
+        <!-- Trip Summary -->
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
                 <div class="card-body p-4">
@@ -34,34 +35,52 @@
                     
                     <div class="mb-3">
                         <label class="text-muted small d-block">Distanță Totală</label>
-                        <span class="fs-5 fw-bold">{{ route.total_distance }} km</span>
+                        <span class="fs-5 fw-bold">{{ trip.schedule.route.total_distance }} km</span>
                     </div>
                     
                     <div class="mb-3">
                         <label class="text-muted small d-block">Durată Estimată</label>
-                        <span class="fs-5 fw-bold">{{ route.duration }}</span>
+                        <span class="fs-5 fw-bold">{{ trip.schedule.route.duration }}</span>
                     </div>
 
                     <div class="mb-3">
                         <label class="text-muted small d-block">Ora Plecare (Capăt)</label>
-                        <span class="fs-5 fw-bold text-success">{{ route.departure_time|date:"H:i" }}</span>
+                        <span class="fs-5 fw-bold text-success">{{ trip.schedule.departure_time|date:"H:i" }}</span>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="text-muted small d-block">Ora Sosire (Capăt)</label>
-                        <span class="fs-5 fw-bold text-danger">{{ route.arrival_time|date:"H:i" }}</span>
+                    {% if dep_station %}
+                    <div class="alert alert-info border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-geo-alt-fill me-2"></i>Segmentul tău:</h6>
+                        <div class="d-flex flex-column gap-2 small">
+                            <div>
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Îmbarcare: <strong>{{ dep_station.name }}</strong>
+                                {% if is_intermediate_pickup %}
+                                    <br><span class="text-primary fw-bold ms-3">(Stație Intermediară)</span>
+                                {% else %}
+                                    <br><span class="text-success fw-bold ms-3">(Capăt de linie)</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <i class="bi bi-box-arrow-left me-1"></i> Debarcare: <strong>{{ arr_station.name }}</strong>
+                            </div>
+                        </div>
                     </div>
+                    {% endif %}
 
                     <div class="d-grid gap-2">
-                        {% if route.departure_time < now %}
+                        {% if trip.schedule.departure_time < now.time and trip.date <= now.date %}
                             <div class="alert alert-warning text-center rounded-pill fw-bold mb-2">
                                 <i class="bi bi-exclamation-triangle-fill me-2"></i> Cursa a plecat deja
                             </div>
                             <button class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
                                 <i class="bi bi-cart-x me-2"></i> Cumpărare Indisponibilă
                             </button>
-                        {% elif route.bus and route.bus.status == 'active' %}
-                            <a href="{% url 'checkout' route.id %}" class="btn btn-success w-100 rounded-pill fw-bold">
+                        {% elif trip.bus and trip.bus.status == 'active' %}
+                            <a href="{% url 'checkout' trip.id %}{% if dep_id %}?dep={{ dep_id }}&arr={{ arr_id }}{% endif %}" class="btn btn-success w-100 rounded-pill fw-bold">
+                                <i class="bi bi-cart-plus me-2"></i> Cumpără Bilete
+                            </a>
+                        {% elif not trip.bus %}
+                             <a href="{% url 'checkout' trip.id %}{% if dep_id %}?dep={{ dep_id }}&arr={{ arr_id }}{% endif %}" class="btn btn-success w-100 rounded-pill fw-bold">
                                 <i class="bi bi-cart-plus me-2"></i> Cumpără Bilete
                             </a>
                         {% else %}
@@ -69,7 +88,7 @@
                                 <i class="bi bi-x-circle me-2"></i> Autobuz Indisponibil
                             </button>
                         {% endif %}
-                        <a href="{% url 'index' %}?route_id={{ route.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
+                        <a href="{% url 'index' %}?route_id={{ trip.schedule.route.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
                             <i class="bi bi-map me-2"></i> Vezi pe hartă
                         </a>
                     </div>
@@ -84,23 +103,23 @@
                     <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
                         <div class="card-body p-4">
                             <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-bus-front me-2"></i>Autobuz</h4>
-                            {% if route.bus %}
-                                <div class="mb-2"><strong>Marcă:</strong> {{ route.bus.brand }}</div>
-                                <div class="mb-2"><strong>Model:</strong> {{ route.bus.model }}</div>
-                                <div class="mb-2"><strong>Nr. Înmatriculare:</strong> {{ route.bus.license_plate }}</div>
-                                <div class="mb-2"><strong>Capacitate:</strong> {{ route.bus.capacity }} locuri</div>
+                            {% if trip.bus %}
+                                <div class="mb-2"><strong>Marcă:</strong> {{ trip.bus.brand }}</div>
+                                <div class="mb-2"><strong>Model:</strong> {{ trip.bus.model }}</div>
+                                <div class="mb-2"><strong>Nr. Înmatriculare:</strong> {{ trip.bus.license_plate }}</div>
+                                <div class="mb-2"><strong>Capacitate:</strong> {{ trip.bus.capacity }} locuri</div>
                                 <div class="mb-0">
                                     <strong>Status:</strong> 
-                                    {% if route.bus.status == 'active' %}
+                                    {% if trip.bus.status == 'active' %}
                                         <span class="badge bg-success">Activ</span>
-                                    {% elif route.bus.status == 'service' %}
+                                    {% elif trip.bus.status == 'service' %}
                                         <span class="badge bg-warning">În service</span>
                                     {% else %}
                                         <span class="badge bg-danger">Defect</span>
                                     {% endif %}
                                 </div>
                             {% else %}
-                                <p class="text-muted">Niciun autobuz alocat.</p>
+                                <p class="text-muted">Niciun autobuz alocat încă.</p>
                             {% endif %}
                         </div>
                     </div>
@@ -109,19 +128,19 @@
                     <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
                         <div class="card-body p-4">
                             <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-person-badge me-2"></i>Șofer</h4>
-                            {% if route.driver %}
-                                <div class="mb-2"><strong>Nume:</strong> {{ route.driver.user.first_name }} {{ route.driver.user.last_name }}</div>
-                                <div class="mb-2"><strong>Rating:</strong> {{ route.driver.rating }} / 5.0</div>
+                            {% if trip.driver %}
+                                <div class="mb-2"><strong>Nume:</strong> {{ trip.driver.user.first_name }} {{ trip.driver.user.last_name }}</div>
+                                <div class="mb-2"><strong>Rating:</strong> {{ trip.driver.rating }} / 5.0</div>
                                 <div class="mb-0">
                                     <strong>Status:</strong> 
-                                    {% if route.driver.status == 'active' %}
+                                    {% if trip.driver.status == 'active' %}
                                         <span class="badge bg-success">Activ</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">{{ route.driver.get_status_display }}</span>
+                                        <span class="badge bg-secondary">{{ trip.driver.get_status_display }}</span>
                                     {% endif %}
                                 </div>
                             {% else %}
-                                <p class="text-muted">Niciun șofer alocat.</p>
+                                <p class="text-muted">Niciun șofer alocat încă.</p>
                             {% endif %}
                         </div>
                     </div>
@@ -138,15 +157,15 @@
                                 <tr>
                                     <th scope="col" class="border-0">#</th>
                                     <th scope="col" class="border-0">Stație</th>
-                                    <th scope="col" class="border-0">Ora Plecare</th>
+                                    <th scope="col" class="border-0">Ora Estimată</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for rs in stations %}
+                                {% for s in stations %}
                                     <tr>
-                                        <td><span class="badge bg-secondary rounded-pill">{{ rs.order }}</span></td>
-                                        <td class="fw-bold">{{ rs.station.name }}</td>
-                                        <td>{{ rs.departure_time|date:"H:i" }}</td>
+                                        <td><span class="badge bg-secondary rounded-pill">{{ forloop.counter }}</span></td>
+                                        <td class="fw-bold">{{ s.station.name }}</td>
+                                        <td>{{ s.time|date:"H:i" }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>

@@ -13,11 +13,11 @@
 
                     <div class="row mb-5">
                         <div class="col-md-6">
-                            <h5 class="fw-bold text-primary mb-3">Rezumat Rută</h5>
-                            <p class="mb-1"><strong>Ruta:</strong> #{{ route.id }}</p>
-                            <p class="mb-1"><strong>De la:</strong> {{ route.stations.first.station.name }}</p>
-                            <p class="mb-1"><strong>Până la:</strong> {{ route.stations.last.station.name }}</p>
-                            <p class="mb-0"><strong>Data/Ora:</strong> {{ route.departure_time|date:"d M Y, H:i" }}</p>
+                            <h5 class="fw-bold text-primary mb-3">Rezumat Cursă</h5>
+                            <p class="mb-1"><strong>Ruta:</strong> {{ trip.schedule.route.name }}</p>
+                            <p class="mb-1"><strong>De la:</strong> {{ start_station.name|default:trip.schedule.route.stations.first.station.name }}</p>
+                            <p class="mb-1"><strong>Până la:</strong> {{ end_station.name|default:trip.schedule.route.stations.last.station.name }}</p>
+                            <p class="mb-0"><strong>Data/Ora Plecare:</strong> {{ departure_dt|date:"d M Y, H:i" }}</p>
                         </div>
                         <div class="col-md-6 text-md-end">
                             <h5 class="fw-bold text-primary mb-3">Preț per bilet</h5>
@@ -26,8 +26,10 @@
                         </div>
                     </div>
 
-                    <form action="{% url 'process_payment' route.id %}" method="POST" id="payment-form">
+                    <form action="{% url 'process_payment' trip.id %}" method="POST" id="payment-form">
                         {% csrf_token %}
+                        <input type="hidden" name="start_station_id" value="{{ start_station.id|default:'' }}">
+                        <input type="hidden" name="end_station_id" value="{{ end_station.id|default:'' }}">
                         
                         <div class="mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -74,7 +76,7 @@
                             <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold py-3 shadow-sm">
                                 <i class="bi bi-shield-check me-2"></i> Confirmă și Plătește
                             </button>
-                            <a href="{% url 'route_detail' route.id %}" class="btn btn-link text-muted fw-bold">Anulează tranzacția</a>
+                            <a href="{% url 'route_detail' trip.id %}" class="btn btn-link text-muted fw-bold">Anulează tranzacția</a>
                         </div>
                     </form>
                 </div>
