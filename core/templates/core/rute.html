@@ -7,14 +7,14 @@
     <div class="row mb-5">
         <div class="col-12 text-center">
             <h1 class="display-4 fw-bold text-dark">Caută Ruta Ta</h1>
-            <p class="text-muted fs-5">Introdu stația de plecare și cea de sosire pentru a găsi cursele disponibile.</p>
+            <p class="text-muted fs-5">Introdu stația de plecare, cea de sosire și data pentru a găsi cursele disponibile.</p>
         </div>
     </div>
 
     <div class="card shadow-sm border-0 mb-5" style="border-radius: 20px;">
         <div class="card-body p-4">
             <form method="GET" action="{% url 'route_search' %}" class="row g-3 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <label for="departure" class="form-label fw-bold">Plecare din:</label>
                     <select name="departure" id="departure" class="form-select rounded-pill">
                         <option value="">Alege stația...</option>
@@ -25,7 +25,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <label for="arrival" class="form-label fw-bold">Sosire la:</label>
                     <select name="arrival" id="arrival" class="form-select rounded-pill">
                         <option value="">Alege stația...</option>
@@ -36,7 +36,11 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
+                    <label for="date" class="form-label fw-bold">Data:</label>
+                    <input type="date" name="date" id="date" class="form-control rounded-pill" value="{{ date }}" required>
+                </div>
+                <div class="col-md-3">
                     <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
                         <i class="bi bi-search me-2"></i> Caută
                     </button>
@@ -51,7 +55,6 @@
             const arrivalSelect = document.getElementById('arrival');
             
             if (!departureId) {
-                // Reset names if no departure selected
                 Array.from(arrivalSelect.options).forEach(option => {
                     if (option.value) {
                         option.textContent = option.getAttribute('data-original-name');
@@ -68,25 +71,32 @@
                             const originalName = option.getAttribute('data-original-name');
                             const count = data[option.value] || 0;
                             option.textContent = `${originalName} (${count} rute)`;
-                            
-                            // Opțional: putem dezactiva opțiunile cu 0 rute
-                            // option.disabled = (count === 0);
                         }
                     });
                 });
         });
+
+        // Set date to today by default if not set
+        window.addEventListener('load', function() {
+            const dateInput = document.getElementById('date');
+            if (!dateInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+                dateInput.min = today;
+            }
+        });
     </script>
 
-    {% if departure and arrival %}
+    {% if departure and arrival and date %}
         <div class="row">
             <div class="col-12">
-                <h3 class="mb-4">Rezultate căutare</h3>
-                {% if routes %}
+                <h3 class="mb-4">Rezultate căutare pentru {{ date }}</h3>
+                {% if results %}
                     <div class="list-group shadow-sm">
-                        {% for item in routes %}
+                        {% for item in results %}
                             <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-4 border-start-0 border-end-0 border-top-0 mb-2 shadow-sm rounded">
                                 <div>
-                                    <h5 class="mb-1 fw-bold text-primary">Rută #{{ item.route.id }}</h5>
+                                    <h5 class="mb-1 fw-bold text-primary">{{ item.trip.schedule.route.name }}</h5>
                                     <p class="mb-0 text-muted">
                                         <i class="bi bi-clock me-2"></i>
                                         Plecare: <strong>{{ item.departure_time|date:"H:i" }}</strong> 
@@ -94,14 +104,14 @@
                                         Sosire: <strong>{{ item.arrival_time|date:"H:i" }}</strong>
                                     </p>
                                     <small class="text-secondary">
-                                        Autobuz: {{ item.route.bus.brand }} {{ item.route.bus.model }} ({{ item.route.bus.license_plate }})
+                                        Autobuz: {% if item.trip.bus %}{{ item.trip.bus.brand }} {{ item.trip.bus.model }}{% else %}Nespecificat{% endif %}
                                     </small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge bg-success fs-6 rounded-pill mb-2 d-block">{{ item.route.total_distance }} km</span>
+                                    <span class="badge bg-success fs-6 rounded-pill mb-2 d-block">{{ item.trip.schedule.route.total_distance }} km</span>
                                     <div class="d-flex flex-column gap-2">
-                                        <a href="{% url 'route_detail' item.route.id %}" class="btn btn-primary btn-sm rounded-pill">Vezi detalii</a>
-                                        <a href="{% url 'index' %}?route_id={{ item.route.id }}" class="btn btn-outline-primary btn-sm rounded-pill">Vezi pe hartă</a>
+                                        <a href="{% url 'route_detail' item.trip.id %}?dep={{ item.dep_id }}&arr={{ item.arr_id }}" class="btn btn-primary btn-sm rounded-pill">Rezervă Bilet</a>
+                                        <a href="{% url 'index' %}?route_id={{ item.trip.schedule.route.id }}" class="btn btn-outline-primary btn-sm rounded-pill">Vezi pe hartă</a>
                                     </div>
                                 </div>
                             </div>
@@ -110,7 +120,7 @@
                 {% else %}
                     <div class="alert alert-info rounded-4 p-4 text-center">
                         <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
-                        Nu am găsit nicio rută disponibilă între aceste stații.
+                        Nu am găsit nicio cursă disponibilă între aceste stații pentru data selectată.
                     </div>
                 {% endif %}
             </div>
