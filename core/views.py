@@ -39,6 +39,21 @@ import hmac
 import hashlib
 from django.conf import settings
 
+from .forms import ContactForm
+
+def contact(request):
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Mesajul tău a fost trimis cu succes! Te vom contacta în cel mai scurt timp.")
+            return redirect('contact')
+    else:
+        form = ContactForm()
+    
+    return render(request, "core/contact.html", {"form": form})
+
+
 @login_required
 def generate_ticket_pdf(request, ticket_id):
     # Luăm biletul principal
