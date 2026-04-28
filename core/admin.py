@@ -1,6 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Employee, Bus, Route, Ticket, Station, RouteStation, RouteSchedule, Trip
+from django.core.exceptions import ValidationError
+from .models import User, Employee, Bus, Route, Ticket, Station, RouteStation, ContactMessage
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'subject', 'created_at')
+    search_fields = ('name', 'email', 'subject', 'message')
+    readonly_fields = ('created_at',)
 from django.utils.html import format_html
 from django.urls import path, reverse
 from django.shortcuts import render, redirect, get_object_or_404

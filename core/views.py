@@ -41,6 +41,21 @@ import hmac
 import hashlib
 from django.conf import settings
 
+from .forms import ContactForm
+
+def contact(request):
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Mesajul tău a fost trimis cu succes! Te vom contacta în cel mai scurt timp.")
+            return redirect('contact')
+    else:
+        form = ContactForm()
+    
+    return render(request, "core/contact.html", {"form": form})
+
+
 @login_required
 def generate_ticket_pdf(request, ticket_id):
     # Luăm biletul principal
@@ -296,6 +311,34 @@ def index(request):
         for rs in RouteStation.objects.filter(route=ruta_obj).order_by('order'):
             statii_data.append({"id": rs.station.id, "nume": rs.station.name, "lat": rs.station.latitude, "lng": rs.station.longitude})
     return render(request, "core/index.html", {'statii_json': json.dumps(statii_data), 'ruta_obj': ruta_obj})
+    rute_active = Route.objects.all()
+    toate_rutele_data = []
+    
+    # Paletă de culori pentru rute
+    culori = ['#0d6efd', '#198754', '#dc3545', '#ffc107', '#6610f2', '#fd7e14', '#20c997', '#0dcaf0']
+    
+    for i, ruta in enumerate(rute_active):
+        statii_ruta = []
+        route_stations = RouteStation.objects.filter(route=ruta).order_by('order')
+        for rs in route_stations:
+            statii_ruta.append({
+                "nume": rs.station.name,
+                "lat": rs.station.latitude,
+                "lng": rs.station.longitude
+            })
+        
+        if statii_ruta:
+            toate_rutele_data.append({
+                "id": ruta.id,
+                "nume": f"Ruta {ruta.id}",
+                "culoare": culori[i % len(culori)],
+                "statii": statii_ruta
+            })
+            
+    context = {
+        'rute_json': json.dumps(toate_rutele_data),
+    }
+    return render(request, "core/index.html", context)
 
 def route_search(request):
     departure_id = request.GET.get('departure')
