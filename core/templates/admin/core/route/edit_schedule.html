@@ -1,0 +1,335 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    #content-main { 
+        padding: 15px; 
+        float: none !important;
+        margin: 0 auto;
+        width: 100%;
+    }
+    
+    * { box-sizing: border-box !important; }
+    
+    .header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--darkened-bg, var(--secondary));
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    .header-bar h1 { color: #fff !important; margin: 0; font-size: 20px; }
+
+    .duration-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--body-bg);
+        padding: 8px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+    }
+    .duration-input {
+        width: 65px;
+        padding: 5px;
+        border: 1px solid var(--primary);
+        background: var(--body-bg);
+        color: var(--body-fg);
+        border-radius: 4px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .excel-container { 
+        overflow-x: auto; 
+        margin-top: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+    }
+    .excel-table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 1600px; 
+        background: var(--body-bg);
+        table-layout: fixed;
+    }
+    .excel-table th {
+        background: var(--primary);
+        color: #fff;
+        padding: 12px 5px;
+        border: 1px solid var(--border-color);
+        font-size: 13px;
+        text-transform: uppercase;
+        width: 14.28%;
+    }
+    .excel-table td {
+        border: 1px solid var(--border-color);
+        vertical-align: top;
+        padding: 0;
+        background: var(--body-bg);
+        width: 14.28%;
+    }
+
+    .time-slot-row {
+        position: relative;
+        padding: 15px 10px;
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s;
+    }
+    .time-slot-row:hover { background: var(--darkened-bg, rgba(0,0,0,0.05)) !important; }
+
+    .sched-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        width: 100%;
+    }
+    .sched-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+    }
+    .s-time { font-weight: bold; color: var(--primary); font-size: 13px; }
+    .s-station { 
+        font-size: 11px; 
+        color: var(--body-fg); 
+        opacity: 0.9; 
+        white-space: normal; /* Permite wrap */
+        line-height: 1.2;
+        text-align: center;
+    }
+    .sched-separator { 
+        color: var(--primary); 
+        opacity: 1; 
+        font-size: 18px; 
+        font-weight: bold;
+        line-height: 1;
+        margin: 2px 0;
+    }
+
+    .btn-del {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        color: var(--body-fg);
+        cursor: pointer;
+        opacity: 0;
+        border: none;
+        background: none;
+        font-size: 16px;
+    }
+    .time-slot-row:hover .btn-del { opacity: 0.5; }
+    .btn-del:hover { opacity: 1 !important; color: #ff4444 !important; }
+
+    .add-cell {
+        padding: 15px 5px;
+        background: var(--darkened-bg, rgba(0,0,0,0.03));
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    .sched-card.add-mode {
+        width: 98%;
+        max-width: 210px; 
+        background: var(--body-bg);
+        border: 1px solid var(--primary);
+        border-radius: 8px;
+        padding: 15px 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin: 0 auto;
+    }
+
+    .excel-input-inline {
+        width: 60px;
+        padding: 5px;
+        border: 1px solid var(--primary);
+        background: var(--body-bg);
+        color: var(--body-fg);
+        border-radius: 4px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin: 15px 0;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc; transition: .4s; border-radius: 20px;
+    }
+    .slider:before {
+        position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+        background-color: white; transition: .4s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(14px); }
+
+    .btn-insert {
+        width: 100%;
+        background: var(--primary);
+        color: #fff !important;
+        border: none;
+        padding: 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-size: 11px;
+    }
+    .btn-insert:hover { background: var(--secondary); }
+
+    .empty-msg { color: var(--body-fg); opacity: 0.5; font-size: 11px; text-align: center; padding: 15px 0; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Acasă</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url 'admin:core_route_changelist' %}">Rute</a>
+&rsaquo; <a href="{% url 'admin:core_route_change' route.id %}">{{ route.name }}</a>
+&rsaquo; Editor Orar
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="header-bar">
+        <h1>Editor Orar: <strong>{{ route.name }}</strong></h1>
+        
+        <form method="POST" class="duration-box">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_duration">
+            <span style="font-size: 12px; font-weight: bold; color: var(--body-fg);">Durată:</span>
+            <input type="number" name="duration_minutes" value="{{ total_duration_minutes }}" class="duration-input" required>
+            <span style="font-size: 12px; color: var(--body-fg);">min</span>
+            <button type="submit" class="button" style="background: var(--primary); margin: 0; padding: 5px 10px;">OK</button>
+        </form>
+    </div>
+    
+    <div class="excel-container">
+        <table class="excel-table">
+            <thead>
+                <tr>
+                    {% for day_val, day_data in schedule_grid.items %}
+                        <th>{{ day_data.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    {% for day_val, day_data in schedule_grid.items %}
+                        <td>
+                            <div class="slots-list">
+                                {% for sched in day_data.times %}
+                                    <div class="time-slot-row">
+                                        {{ sched.get_full_info|safe }}
+                                        <form method="POST" style="display:inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="sched_id" value="{{ sched.id }}">
+                                            <button type="submit" class="btn-del">&times;</button>
+                                        </form>
+                                    </div>
+                                {% empty %}
+                                    <div class="empty-msg">Niciun record</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="add-cell">
+                                <form method="POST" autocomplete="off">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="add">
+                                    <input type="hidden" name="day" value="{{ day_val }}" class="day-input">
+                                    
+                                    <div class="sched-card add-mode">
+                                        <div class="sched-row">
+                                            <input type="text" name="time" placeholder="00:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required 
+                                                   class="excel-input-inline"
+                                                   oninput="this.value = this.value.replace(/[^0-9:]/g, ''); if(this.value.length==2 && !this.value.includes(':')) this.value += ':';"
+                                                   maxlength="5">
+                                            <span class="s-station">{{ route.stations.first.station.name_formatted|safe }}</span>
+                                        </div>
+                                        <div class="sched-separator">↓</div>
+                                        <div class="sched-row">
+                                            <span class="s-time arrival-time-preview" style="opacity: 0.5;">--:--</span>
+                                            <span class="s-station">{{ route.stations.last.station.name_formatted|safe }}</span>
+                                        </div>
+                                        
+                                        <div class="toggle-wrapper">
+                                            <span>Toate zilele</span>
+                                            <label class="switch">
+                                                <input type="checkbox" onchange="this.form.querySelector('.day-input').value = this.checked ? 'all' : '{{ day_val }}'">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn-insert">ADĂUGAȚI</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="submit-row" style="margin-top: 30px; text-align: left; background: none; border: none; padding: 0;">
+        <a href="{% url 'admin:core_route_change' route.id %}" class="button" style="background: var(--default-button-bg, #444); color: white;">ÎNAPOI LA RUTĂ</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const durationInput = document.querySelector('input[name="duration_minutes"]');
+        
+        function updatePreviews() {
+            const durationMinutes = parseInt(durationInput.value) || 0;
+            const durationSeconds = durationMinutes * 60;
+
+            document.querySelectorAll('.excel-input-inline').forEach(input => {
+                const val = input.value;
+                const card = input.closest('.sched-card');
+                const arrivalSpan = card.querySelector('.arrival-time-preview');
+                
+                if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(val)) {
+                    const [hours, minutes] = val.split(':').map(Number);
+                    let totalSec = (hours * 3600) + (minutes * 60) + durationSeconds;
+                    totalSec = totalSec % (24 * 3600);
+                    const h = Math.floor(totalSec / 3600);
+                    const m = Math.floor((totalSec % 3600) / 60);
+                    arrivalSpan.textContent = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                    arrivalSpan.style.opacity = '1';
+                } else {
+                    arrivalSpan.textContent = '--:--';
+                    arrivalSpan.style.opacity = '0.5';
+                }
+            });
+        }
+
+        durationInput.addEventListener('input', updatePreviews);
+        document.querySelectorAll('.excel-input-inline').forEach(input => {
+            input.addEventListener('input', updatePreviews);
+        });
+    });
+</script>
+{% endblock %}

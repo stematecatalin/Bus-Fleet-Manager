@@ -1,0 +1,26 @@
+{% extends "admin/change_form.html" %}
+
+{% block field_sets %}
+    {{ block.super }}
+    
+    {# Harta este randată aici, dar o vom muta prin JS în interiorul fieldset-ului corect #}
+    {% include "admin/core/station_map.html" %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var mapElement = document.getElementById('map-container');
+            // Găsim fieldset-ul cu indexul 1 (Localizare pe Hartă)
+            var fieldsets = document.querySelectorAll('fieldset');
+            if (fieldsets.length > 1) {
+                var targetFieldset = fieldsets[1];
+                // Inserăm harta la începutul fieldset-ului, după titlu
+                var description = targetFieldset.querySelector('.description');
+                if (description) {
+                    description.parentNode.insertBefore(mapElement, description.nextSibling);
+                } else {
+                    targetFieldset.insertBefore(mapElement, targetFieldset.firstChild.nextSibling);
+                }
+            }
+        });
+    </script>
+{% endblock %}
