@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Suprascriem variabilele globale de temă ale Django 4/5 */
+    :root, :root[data-theme="light"], :root[data-theme="dark"] {
+        --primary: #2E7D32 !important;
+        --primary-fg: #fff !important;
+        --secondary: #1B5E20 !important;
+        --accent: #419140 !important;
+        
+        --header-bg: #2E7D32 !important;
+        --header-color: #fff !important;
+        --header-link-color: #fff !important;
+        
+        --breadcrumbs-bg: #2E7D32 !important;
+        --breadcrumbs-fg: #fff !important;
+        --breadcrumbs-link-fg: #fff !important;
+        
+        --link-color: #2E7D32 !important;
+        --link-hover-color: #1B5E20 !important;
+        
+        --button-bg: #2E7D32 !important;
+        --button-fg: #fff !important;
+        --button-hover-bg: #1B5E20 !important;
+        
+        --default-button-bg: #444 !important;
+        --default-button-hover-bg: #222 !important;
+    }
+
+    /* Forțăm elementele care nu folosesc variabilele corect */
+    #header {
+        background: var(--primary) !important;
+        color: #fff !important;
+    }
+
+    .breadcrumbs {
+        background: var(--primary) !important;
+        color: #fff !important;
+    }
+
+    .breadcrumbs a {
+        color: #fff !important;
+    }
+
+    /* Branding alb */
+    #branding h1 a, #branding h1 a:link, #branding h1 a:visited {
+        color: #fff !important;
+    }
+
+    /* Culori butoane */
+    input[type="submit"], .button, a.button {
+        background: var(--primary) !important;
+        color: #fff !important;
+    }
+
+    /* Modulele (barele verzi de deasupra listelor) */
+    .module h2, .module caption {
+        background: var(--primary) !important;
+        color: #fff !important;
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">AUTOTRANS MANAGEMENT</a>
+</h1>
+{% endblock %}
