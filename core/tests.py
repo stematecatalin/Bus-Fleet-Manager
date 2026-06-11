@@ -47,6 +47,40 @@ class ModelTests(TestCase):
         self.assertEqual(self.route.name, "Test Route")
         self.assertEqual(str(self.route), "Test Route")
 
+class EmployeeTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="driver@example.com",
+            password="password",
+            first_name="John",
+            last_name="Doe"
+        )
+
+    def test_driver_creation(self):
+        employee = Employee.objects.create(
+            user=self.user,
+            cnp="1234567890123",
+            position="driver",
+            hire_date=date.today(),
+            salary=3000,
+            license_number="LICENSE123"
+        )
+        self.assertEqual(employee.position, "driver")
+        self.assertEqual(employee.license_number, "LICENSE123")
+
+    def test_invalid_license_for_non_driver(self):
+        """Manageri nu ar trebui să aibă număr de permis (conform validării din model)"""
+        employee = Employee(
+            user=self.user,
+            cnp="1234567890123",
+            position="manager",
+            hire_date=date.today(),
+            salary=5000,
+            license_number="SHOULD_NOT_BE_HERE"
+        )
+        with self.assertRaises(ValidationError):
+            employee.full_clean()
+
 class ViewTests(TestCase):
     def test_index_view(self):
         response = self.client.get(reverse('index'))
