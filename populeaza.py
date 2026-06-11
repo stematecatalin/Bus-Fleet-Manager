@@ -1,6 +1,6 @@
 import os
 import django
-from datetime import date, datetime, time, timedelta
+from datetime import date, time, timedelta
 from django.utils import timezone
 from decimal import Decimal
 
@@ -51,7 +51,7 @@ def populate():
     print("--- Pasul 1: Creăm utilizatori verificați ---")
     
     # Superuser
-    admin_u = create_verified_user(
+    create_verified_user(
         email="admin@autotrans.ro",
         password="adminpassword",
         first_name="Admin",

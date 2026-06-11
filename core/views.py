@@ -1,16 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
-import json
 from .models import Station, Route, RouteStation, Ticket, RouteSchedule, Trip
-from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from decimal import Decimal
 import qrcode
 import io
+import json
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import landscape, A6
 from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
@@ -31,13 +29,12 @@ try:
     else:
         FONT_NAME = 'Helvetica'
         FONT_BOLD = 'Helvetica-Bold'
-except:
+except Exception:
     FONT_NAME = 'Helvetica'
     FONT_BOLD = 'Helvetica-Bold'
 
 from reportlab.lib.pagesizes import A4
 
-import hmac
 import hashlib
 from django.conf import settings
 from .forms import ContactForm
@@ -307,7 +304,8 @@ def validate_ticket_api(request):
 
         try:
             parts = qr_content.split('|')
-            if parts[0] != "AutoTrans": return JsonResponse({'success': False, 'message': 'Cod QR invalid.'})
+            if parts[0] != "AutoTrans":
+                return JsonResponse({'success': False, 'message': 'Cod QR invalid.'})
             ticket_id = int(parts[1].split(':')[1])
             ticket = Ticket.objects.get(id=ticket_id)
 
@@ -325,7 +323,8 @@ def validate_ticket_api(request):
             if ticket.trip.driver != request.user.employee:
                 return JsonResponse({'success': False, 'message': 'Nu sunteți șoferul desemnat pentru această cursă.'})
 
-            if ticket.is_boarded: return JsonResponse({'success': False, 'message': f'Deja îmbarcat: {ticket.passenger_name}'})
+            if ticket.is_boarded:
+                return JsonResponse({'success': False, 'message': f'Deja îmbarcat: {ticket.passenger_name}'})
             ticket.is_boarded = True
             ticket.save()
             return JsonResponse({
@@ -334,7 +333,8 @@ def validate_ticket_api(request):
                 'passenger': ticket.passenger_name,
                 'trip_id': ticket.trip.id
             })
-        except Exception as e: return JsonResponse({'success': False, 'message': f'Eroare: {str(e)}'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Eroare: {str(e)}'})
     return JsonResponse({'success': False, 'message': 'Metodă nepermisă.'})
 
 def index(request):
@@ -433,7 +433,8 @@ def route_search(request):
                                 'arr_name': rs_arr.station.name
                             })
 
-        except ValueError: pass
+        except ValueError:
+            pass
     dep_obj = Station.objects.filter(id=departure_id).first() if departure_id else None
     arr_obj = Station.objects.filter(id=arrival_id).first() if arrival_id else None
 
@@ -475,14 +476,16 @@ def route_detail(request, trip_id):
     station_details = []
     
     dep_rs = None
-    arr_rs = None
     
     for rs in RouteStation.objects.filter(route=trip.schedule.route).order_by('order'):
         is_dep = str(rs.station.id) == str(dep_id)
         is_arr = str(rs.station.id) == str(arr_id)
         
-        if is_dep: dep_rs = rs
-        if is_arr: arr_rs = rs
+        if is_dep:
+            dep_rs = rs
+        if is_arr:
+            # arr_rs variable was unused, so we just check for is_arr logic if needed
+            pass
             
         station_details.append({
             'station': rs.station, 

@@ -1,13 +1,13 @@
 import os
 import django
-from datetime import date, time, timedelta
+from datetime import time, timedelta
 from django.utils import timezone
-from decimal import Decimal
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Bus_Fleet_Manager.settings')
 django.setup()
 
-from core.models import User, Employee, Bus, Station, Route, RouteStation, RouteSchedule, Trip
+from core.models import Employee, Bus, Station, Route, RouteStation, RouteSchedule, Trip
+
 
 def add_routes():
     print("--- Adăugăm rute noi ---")
@@ -47,7 +47,8 @@ def add_routes():
             
             # Generăm curse pentru fiecare zi din săptămâna viitoare
             current_date = today + timedelta(days=(day - today.weekday()) % 7)
-            if current_date < today: current_date += timedelta(days=7)
+            if current_date < today:
+                current_date += timedelta(days=7)
             
             for s in [s1, s2]:
                 Trip.objects.create(
@@ -59,6 +60,7 @@ def add_routes():
                 )
 
     print("--- RUTE ADĂUGATE CU SUCCES! ---")
+
 
 if __name__ == '__main__':
     add_routes()
