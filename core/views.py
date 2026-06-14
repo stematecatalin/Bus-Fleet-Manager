@@ -509,7 +509,6 @@ def route_detail(request, trip_id):
 
 
 import google.generativeai as genai
-from django.conf import settings
 
 # Configurare Gemini
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
