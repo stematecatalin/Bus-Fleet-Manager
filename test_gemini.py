@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
-print(f"Testing API Key: {api_key[:10]}...{api_key[-5:] if api_key else ''}")
-
-genai.configure(api_key=api_key)
+if not api_key:
+    print("SKIP: GEMINI_API_KEY not found in environment.")
+else:
+    print(f"Testing API Key: {api_key[:10]}...{api_key[-5:]}")
+    genai.configure(api_key=api_key)
 
 try:
     print("Listing available models...")
