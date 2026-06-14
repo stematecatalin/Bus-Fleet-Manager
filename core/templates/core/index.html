@@ -13,22 +13,38 @@
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <!-- Hero Section -->
-<div class="p-4 p-md-5 mb-5 text-white rounded-4 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, #419140 0%, #2e7d32 100%);">
-    <!-- Autobuz Decorativ -->
-    <div class="position-absolute d-none d-lg-block" style="right: -30px; top: 50%; transform: translateY(-50%) rotate(-5deg); opacity: 0.2; z-index: 1;">
-        <i class="bi bi-bus-front" style="font-size: 250px; color: #ff4444;"></i>
+<section class="home-hero mb-5">
+    <div class="home-hero-glow home-hero-glow-one"></div>
+    <div class="home-hero-glow home-hero-glow-two"></div>
+
+    <div class="home-hero-bus d-none d-lg-flex" aria-hidden="true">
+        <div class="home-hero-bus-ring"></div>
+        <i class="bi bi-bus-front-fill"></i>
     </div>
-    
-    <div class="position-relative py-3 text-center ms-md-2" style="z-index: 2; max-width: 800px;">
-        <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Călătorește cu <span style="font-weight: 900;">AutoTrans</span></h1>
-        <p class="lead mb-4 mx-auto opacity-90 fs-5" style="max-width: 700px; font-weight: 400; text-shadow: 1px 1px 2px rgba(0,0,0,0.15);">Descoperă o rețea de transport modernă, eficientă și mereu la timp. Găsește-ți ruta, rezervă-ți locul și bucură-te de confortul călătoriei.</p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="/rute/" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-bold text-success shadow-sm fs-5 transition-all">
-                <i class="bi bi-search me-2"></i>Caută Rute
+
+    <div class="home-hero-content">
+        <span class="home-hero-eyebrow">
+            <i class="bi bi-stars"></i> Transport simplu, de la plecare la destinație
+        </span>
+        <h1>Călătorește mai ușor cu <span>AutoTrans</span></h1>
+        <p>Găsește ruta potrivită, compară orele și rezervă biletul direct online. Asistentul nostru te ajută inclusiv cu trasee care necesită transfer.</p>
+
+        <div class="home-hero-actions">
+            <a href="/rute/" class="home-hero-primary-btn">
+                <i class="bi bi-search"></i> Caută o rută
+            </a>
+            <a href="#map" class="home-hero-secondary-btn">
+                <i class="bi bi-map"></i> Explorează rețeaua
             </a>
         </div>
+
+        <div class="home-hero-benefits">
+            <span><i class="bi bi-check-circle-fill"></i> Rezervare rapidă</span>
+            <span><i class="bi bi-check-circle-fill"></i> Bilet digital cu QR</span>
+            <span><i class="bi bi-check-circle-fill"></i> Rute cu transfer</span>
+        </div>
     </div>
-</div>
+</section>
 
 <!-- Map Section -->
 <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
