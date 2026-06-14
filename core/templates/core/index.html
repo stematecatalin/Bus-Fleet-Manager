@@ -185,14 +185,23 @@
 
 <!-- Floating Chat Button -->
 <a href="javascript:void(0)" class="chat-button shadow-lg" id="chatToggleButton" title="Chat cu noi">
-    <i class="bi bi-chat-dots-fill"></i>
+    <i class="bi bi-stars"></i>
+    <span class="chat-button-status"></span>
 </a>
 
 <!-- Chat Window -->
 <div class="chat-window" id="chatWindow">
     <div class="chat-header">
-        <h5><i class="bi bi-headset me-2"></i>Suport AutoTrans</h5>
-        <button class="btn-close btn-close-white" id="closeChat"></button>
+        <div class="chat-assistant-identity">
+            <div class="chat-assistant-avatar"><i class="bi bi-bus-front-fill"></i></div>
+            <div>
+                <h5>Asistent AutoTrans</h5>
+                <span><i class="bi bi-circle-fill"></i> Online · răspunde imediat</span>
+            </div>
+        </div>
+        <button class="chat-close-btn" id="closeChat" aria-label="Închide chatul">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
     <div class="chat-messages" id="chatMessages">
         <div id="chatHistory">
@@ -204,9 +213,32 @@
             <span></span><span></span><span></span>
         </div>
     </div>
+    <div class="chat-suggestions" id="chatSuggestions">
+        <span class="chat-suggestions-label">Întrebări rapide</span>
+        <div class="chat-suggestions-track">
+        <button type="button" data-template="Cum ajung acum din [plecare] în [destinație]?">
+            <i class="bi bi-geo-alt"></i> Plec acum
+        </button>
+        <button type="button" data-template="Cum ajung pe [data] la ora [ora] din [plecare] în [destinație]?">
+            <i class="bi bi-calendar3"></i> Planifică ruta
+        </button>
+        <button type="button" data-template="Cât costă biletul din [plecare] în [destinație]?">
+            <i class="bi bi-cash-coin"></i> Verifică prețul
+        </button>
+        <button type="button" data-message="Care este următoarea mea cursă?">
+            <i class="bi bi-clock-history"></i> Următoarea cursă
+        </button>
+        <button type="button" data-message="Cum îmi descarc biletul și codul QR?">
+            <i class="bi bi-qr-code"></i> Descarcă biletul
+        </button>
+        <button type="button" data-message="Pot lua un bagaj mare cu mine?">
+            <i class="bi bi-suitcase-lg"></i> Bagaje
+        </button>
+        </div>
+    </div>
     <div class="chat-input-area">
-        <input type="text" class="chat-input" id="chatInput" placeholder="Scrie un mesaj...">
-        <button class="chat-send-btn" id="sendChat">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Întreabă despre o rută..." autocomplete="off">
+        <button class="chat-send-btn" id="sendChat" aria-label="Trimite mesajul">
             <i class="bi bi-send-fill"></i>
         </button>
     </div>
@@ -221,6 +253,7 @@
         const sendBtn = document.getElementById('sendChat');
         const chatMessages = document.getElementById('chatMessages');
         const chatHistory = document.getElementById('chatHistory');
+        const chatSuggestions = document.getElementById('chatSuggestions');
 
         // Funcție pentru a obține CSRF token
         function getCookie(name) {
@@ -266,7 +299,7 @@
                 .then(data => {
                     chatHistory.innerHTML = '';
                     if (data.history.length === 0) {
-                        appendMessage("Bună ziua! Cum vă putem ajuta astăzi?", true, new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                        appendMessage("Bună! Spune-mi de unde pleci, unde vrei să ajungi și când. Pot găsi inclusiv variante cu transfer.", true, new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
                     } else {
                         data.history.forEach(msg => {
                             appendMessage(msg.text, msg.is_from_support, msg.created_at);
@@ -276,13 +309,95 @@
                 });
         }
 
-        function appendMessage(text, isSupport, time) {
+        function escapeHtml(text) {
+            const element = document.createElement('div');
+            element.textContent = text || '';
+            return element.innerHTML;
+        }
+
+        function formatMessage(text) {
+            let formatted = escapeHtml(text)
+                .replace(/\[(.*?)\]\s*\((.*?)\)/g, '<a href="$2" class="chat-link">$1</a>') // Link-uri (permite spațiu între ] și ()
+                .replace(/^### (.*?)$/gm, '<h3>$1</h3>') // Headings h3
+                .replace(/^---$/gm, '<hr>') // Linii orizontale
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+                .replace(/^\* (.*?)$/gm, '<li>$1</li>'); // Liste
+
+            if (formatted.includes('<li>')) {
+                formatted = formatted.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+            }
+
+            return formatted;
+        }
+
+        function formatDuration(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const remaining = minutes % 60;
+            return `${hours}h ${String(remaining).padStart(2, '0')}m`;
+        }
+
+        function renderJourneyCards(journeys) {
+            return journeys.map((journey, index) => {
+                const typeLabel = journey.transfer_count === 0
+                    ? '<i class="bi bi-lightning-charge-fill"></i> Direct'
+                    : `<i class="bi bi-signpost-split-fill"></i> Transfer în ${escapeHtml(journey.transfer_station)}`;
+                const legs = journey.legs.map((leg, legIndex) => `
+                    <div class="journey-leg">
+                        <div class="journey-leg-marker"><span></span><i></i><span></span></div>
+                        <div class="journey-leg-content">
+                            <div class="journey-stop-row">
+                                <strong>${escapeHtml(leg.departure_time)}<small>${escapeHtml(leg.departure_date)}</small></strong>
+                                <span>${escapeHtml(leg.departure_name)}</span>
+                            </div>
+                            <div class="journey-stop-row">
+                                <strong>${escapeHtml(leg.arrival_time)}<small>${escapeHtml(leg.arrival_date)}</small></strong>
+                                <span>${escapeHtml(leg.arrival_name)}</span>
+                            </div>
+                            <div class="journey-leg-meta">
+                                <span><i class="bi bi-signpost-2"></i> ${escapeHtml(leg.distance_km)} km</span>
+                                <strong>${escapeHtml(leg.price)} RON</strong>
+                            </div>
+                            <a class="journey-book-btn" href="${escapeHtml(leg.link)}">
+                                <i class="bi bi-ticket-perforated"></i>
+                                ${journey.legs.length > 1 ? `Rezervă segmentul ${legIndex + 1}` : 'Vezi cursa și rezervă'}
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <article class="journey-card">
+                        <div class="journey-card-header">
+                            <span class="journey-option">Varianta ${index + 1} · ${escapeHtml(journey.date)}</span>
+                            <span class="journey-type">${typeLabel}</span>
+                        </div>
+                        <div class="journey-summary">
+                            <div><strong>${escapeHtml(journey.departure_time)}</strong><span>Plecare</span></div>
+                            <div class="journey-summary-line"><i class="bi bi-bus-front-fill"></i></div>
+                            <div><strong>${escapeHtml(journey.arrival_time)}</strong><span>Sosire</span></div>
+                            <span class="journey-duration">${formatDuration(journey.duration_minutes)}</span>
+                        </div>
+                        <div class="journey-price-row">
+                            <span>Preț total / pasager</span>
+                            <strong>${escapeHtml(journey.total_price)} RON</strong>
+                        </div>
+                        <div class="journey-legs">${legs}</div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function appendMessage(text, isSupport, time, journeys = []) {
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${isSupport ? 'message-support' : 'message-user'}`;
-            msgDiv.innerHTML = `
-                ${text}
-                <span class="message-time">${time}</span>
-            `;
+            if (journeys.length) msgDiv.classList.add('message-with-journeys');
+
+            const displayText = journeys.length ? text.split('\n\n')[0] : text;
+            const content = isSupport ? formatMessage(displayText) : escapeHtml(displayText);
+            const cards = journeys.length ? renderJourneyCards(journeys) : '';
+            msgDiv.innerHTML = `<div class="message-body">${content}</div>${cards}<span class="message-time">${escapeHtml(time)}</span>`;
+
             chatHistory.appendChild(msgDiv);
             scrollToBottom();
         }
@@ -321,7 +436,12 @@
 
                 if (data.success) {
                     // Adăugăm răspunsul de suport
-                    appendMessage(data.support_message.text, true, data.support_message.created_at);
+                    appendMessage(
+                        data.support_message.text,
+                        true,
+                        data.support_message.created_at,
+                        data.support_message.journeys || []
+                    );
                 } else {
                     appendMessage("Eroare: " + data.message, true, now);
                 }
@@ -333,6 +453,18 @@
         }
 
         sendBtn.addEventListener('click', sendMessage);
+        chatSuggestions.addEventListener('click', function(event) {
+            const button = event.target.closest('button');
+            if (!button) return;
+            if (button.dataset.template) {
+                chatInput.value = button.dataset.template;
+                chatInput.focus();
+                chatInput.setSelectionRange(0, chatInput.value.length);
+                return;
+            }
+            chatInput.value = button.dataset.message;
+            sendMessage();
+        });
         chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendMessage();
         });
