@@ -183,4 +183,160 @@
     .hover-lift:hover { transform: translateY(-5px); transition: 0.3s; }
 </style>
 
+<!-- Floating Chat Button -->
+<a href="javascript:void(0)" class="chat-button shadow-lg" id="chatToggleButton" title="Chat cu noi">
+    <i class="bi bi-chat-dots-fill"></i>
+</a>
+
+<!-- Chat Window -->
+<div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+        <h5><i class="bi bi-headset me-2"></i>Suport AutoTrans</h5>
+        <button class="btn-close btn-close-white" id="closeChat"></button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div id="chatHistory">
+            <!-- Mesajele vor fi încărcate aici -->
+        </div>
+        
+        <!-- Indicator scriere -->
+        <div id="typingIndicator" class="typing-indicator" style="display: none;">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Scrie un mesaj...">
+        <button class="chat-send-btn" id="sendChat">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatToggle = document.getElementById('chatToggleButton');
+        const chatWindow = document.getElementById('chatWindow');
+        const closeChat = document.getElementById('closeChat');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendChat');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatHistory = document.getElementById('chatHistory');
+
+        // Funcție pentru a obține CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        // Toggle Chat
+        chatToggle.addEventListener('click', function() {
+            chatWindow.classList.remove('closing');
+            chatWindow.classList.add('active');
+            chatToggle.style.display = 'none'; 
+            loadChatHistory();
+            chatInput.focus();
+        });
+
+        closeChat.addEventListener('click', function() {
+            chatWindow.classList.add('closing');
+            // Așteptăm terminarea animației înainte de a ascunde fereastra complet
+            setTimeout(() => {
+                chatWindow.classList.remove('active');
+                chatWindow.classList.remove('closing');
+                chatToggle.style.display = 'flex';
+            }, 300);
+        });
+
+        // Load History
+        function loadChatHistory() {
+            fetch('/api/get-chat-history/')
+                .then(response => response.json())
+                .then(data => {
+                    chatHistory.innerHTML = '';
+                    if (data.history.length === 0) {
+                        appendMessage("Bună ziua! Cum vă putem ajuta astăzi?", true, new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                    } else {
+                        data.history.forEach(msg => {
+                            appendMessage(msg.text, msg.is_from_support, msg.created_at);
+                        });
+                    }
+                    scrollToBottom();
+                });
+        }
+
+        function appendMessage(text, isSupport, time) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isSupport ? 'message-support' : 'message-user'}`;
+            msgDiv.innerHTML = `
+                ${text}
+                <span class="message-time">${time}</span>
+            `;
+            chatHistory.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            chatInput.value = '';
+            
+            // Adăugăm mesajul utilizatorului imediat în UI
+            const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            appendMessage(message, false, now);
+
+            // Arătăm indicatorul de scriere
+            const typingIndicator = document.getElementById('typingIndicator');
+            typingIndicator.style.display = 'block';
+            scrollToBottom();
+
+            fetch('/api/send-chat-message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ascundem indicatorul
+                typingIndicator.style.display = 'none';
+
+                if (data.success) {
+                    // Adăugăm răspunsul de suport
+                    appendMessage(data.support_message.text, true, data.support_message.created_at);
+                } else {
+                    appendMessage("Eroare: " + data.message, true, now);
+                }
+            })
+            .catch(error => {
+                typingIndicator.style.display = 'none';
+                appendMessage("Eroare de conexiune.", true, now);
+            });
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    });
+</script>
+
 {% endblock %}

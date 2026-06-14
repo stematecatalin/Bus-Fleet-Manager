@@ -315,3 +315,18 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"Mesaj de la {self.name} - {self.subject}"
+
+
+class ChatMessage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages", null=True, blank=True)
+    message = models.TextField("Mesaj")
+    is_from_support = models.BooleanField("Este de la suport", default=False)
+    created_at = models.DateTimeField("Data trimiterii", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Mesaj Chat"
+        verbose_name_plural = "Mesaje Chat"
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{'Suport' if self.is_from_support else self.user} - {self.created_at}"

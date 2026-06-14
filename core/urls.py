@@ -15,4 +15,6 @@ urlpatterns = [
     path("scanner/", views.ticket_scanner, name="ticket_scanner"),
     path("api/validate-ticket/", views.validate_ticket_api, name="validate_ticket_api"),
     path("api/arrival-counts/", views.get_arrival_counts, name="get_arrival_counts"),
-]
+    path("api/send-chat-message/", views.send_chat_message, name="send_chat_message"),
+    path("api/get-chat-history/", views.get_chat_history, name="get_chat_history"),
+    ]
