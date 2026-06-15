@@ -3,177 +3,227 @@
 {% block title %}AutoTrans - Detalii Cursă #{{ trip.id }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-pill px-4" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="container route-detail-page py-4 py-md-5">
+    <nav aria-label="breadcrumb" class="route-detail-breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'route_search' %}">Căutare rute</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Cursa #{{ trip.id }}</li>
+        </ol>
+    </nav>
+
+    <header class="route-detail-hero">
+        <div class="route-detail-hero-copy">
+            <span class="route-detail-kicker">
+                <i class="bi bi-bus-front-fill"></i>
+                Detalii cursă #{{ trip.id }}
+            </span>
+            <h1>{{ trip.schedule.route.name }}</h1>
+            <div class="route-detail-date">
+                <i class="bi bi-calendar3"></i>
+                <span>{{ trip.date|date:"l, d F Y" }}</span>
             </div>
-        {% endfor %}
-    {% endif %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'route_search' %}">Căutare Rute</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Detalii Cursă #{{ trip.id }}</li>
-                </ol>
-            </nav>
-            <h1 class="display-5 fw-bold text-dark">{{ trip.schedule.route.name }}</h1>
-            <h3 class="text-muted">Data: {{ trip.date|date:"d M Y" }}</h3>
-            <hr class="my-4">
         </div>
-    </div>
 
-    <div class="row g-4">
-        <!-- Trip Summary -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
-                <div class="card-body p-4">
-                    <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-info-circle me-2"></i>Informații Generale</h4>
-                    
-                    <div class="mb-3">
-                        <label class="text-muted small d-block">Distanță Totală</label>
-                        <span class="fs-5 fw-bold">{{ trip.schedule.route.total_distance }} km</span>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="text-muted small d-block">Durată Estimată</label>
-                        <span class="fs-5 fw-bold">{{ trip.schedule.route.duration }}</span>
-                    </div>
+        {% if dep_station and arr_station %}
+        <div class="route-detail-hero-journey" aria-label="Segmentul selectat">
+            <div>
+                <span>Plecare</span>
+                <strong>{{ dep_station.name }}</strong>
+            </div>
+            <i class="bi bi-arrow-right"></i>
+            <div>
+                <span>Destinație</span>
+                <strong>{{ arr_station.name }}</strong>
+            </div>
+        </div>
+        {% endif %}
+    </header>
 
-                    <div class="mb-3">
-                        <label class="text-muted small d-block">Ora Plecare (Capăt)</label>
-                        <span class="fs-5 fw-bold text-success">{{ trip.schedule.departure_time|date:"H:i" }}</span>
-                    </div>
+    <div class="route-detail-layout">
+        <aside class="route-summary-card">
+            <div class="route-section-heading">
+                <span class="route-section-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
+                <div>
+                    <span>Rezumat</span>
+                    <h2>Informații cursă</h2>
+                </div>
+            </div>
 
-                    {% if dep_station %}
-                    <div class="alert alert-info border-0 shadow-sm mb-4" style="border-radius: 15px;">
-                        <h6 class="fw-bold mb-2"><i class="bi bi-geo-alt-fill me-2"></i>Segmentul tău:</h6>
-                        <div class="d-flex flex-column gap-2 small">
-                            <div>
-                                <i class="bi bi-box-arrow-in-right me-1"></i> Îmbarcare: <strong>{{ dep_station.name }}</strong>
-                                {% if is_intermediate_pickup %}
-                                    <br><span class="text-primary fw-bold ms-3">(Stație Intermediară)</span>
-                                {% else %}
-                                    <br><span class="text-success fw-bold ms-3">(Capăt de linie)</span>
-                                {% endif %}
-                            </div>
-                            <div>
-                                <i class="bi bi-box-arrow-left me-1"></i> Debarcare: <strong>{{ arr_station.name }}</strong>
-                            </div>
+            <div class="route-summary-metrics">
+                <div class="route-summary-metric">
+                    <i class="bi bi-signpost-2"></i>
+                    <span>Distanță</span>
+                    <strong>{{ trip.schedule.route.total_distance }} km</strong>
+                </div>
+                <div class="route-summary-metric">
+                    <i class="bi bi-clock"></i>
+                    <span>Durată</span>
+                    <strong>{{ trip.schedule.route.duration }}</strong>
+                </div>
+                <div class="route-summary-metric">
+                    <i class="bi bi-alarm"></i>
+                    <span>Plecare</span>
+                    <strong>{{ trip.schedule.departure_time|date:"H:i" }}</strong>
+                </div>
+            </div>
+
+            {% if dep_station and arr_station %}
+            <div class="route-selected-segment">
+                <span class="route-selected-segment-label">Segment selectat</span>
+                <div class="route-selected-stop">
+                    <span class="route-stop-dot"></span>
+                    <div>
+                        <small>De la</small>
+                        <strong>{{ dep_station.name }}</strong>
+                    </div>
+                </div>
+                <div class="route-segment-line"></div>
+                <div class="route-selected-stop">
+                    <span class="route-stop-dot is-arrival"></span>
+                    <div>
+                        <small>Până la</small>
+                        <strong>{{ arr_station.name }}</strong>
+                    </div>
+                </div>
+                <p class="route-intermediate-note mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    {% if is_intermediate_pickup %}
+                        Îmbarcare dintr-o stație intermediară
+                    {% else %}
+                        Îmbarcare de la capătul liniei
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+            <div class="route-detail-actions">
+                {% if trip.schedule.departure_time < now.time and trip.date <= now.date %}
+                    <div class="route-detail-notice is-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Această cursă a plecat deja.
+                    </div>
+                    <button class="btn btn-secondary btn-lg w-100" disabled>Rezervare indisponibilă</button>
+                {% elif trip.bus and trip.bus.status == 'active' %}
+                    <a href="{% url 'checkout' trip.id %}{% if dep_id %}?dep={{ dep_id }}&arr={{ arr_id }}{% endif %}" class="btn route-primary-action btn-lg w-100">
+                        <i class="bi bi-ticket-perforated"></i>
+                        Cumpără bilet
+                    </a>
+                {% elif not trip.bus %}
+                    <a href="{% url 'checkout' trip.id %}{% if dep_id %}?dep={{ dep_id }}&arr={{ arr_id }}{% endif %}" class="btn route-primary-action btn-lg w-100">
+                        <i class="bi bi-ticket-perforated"></i>
+                        Cumpără bilet
+                    </a>
+                {% else %}
+                    <div class="route-detail-notice is-danger">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Autobuzul nu este disponibil momentan.
+                    </div>
+                    <button class="btn btn-secondary btn-lg w-100" disabled>Rezervare indisponibilă</button>
+                {% endif %}
+
+                <a href="{% url 'index' %}?route_id={{ trip.schedule.route.id }}" class="btn route-secondary-action btn-lg w-100">
+                    <i class="bi bi-map"></i>
+                    Vezi ruta pe hartă
+                </a>
+            </div>
+        </aside>
+
+        <main class="route-detail-content">
+            <div class="route-operations-grid">
+                <article class="route-info-card">
+                    <div class="route-section-heading">
+                        <span class="route-section-icon is-blue"><i class="bi bi-bus-front"></i></span>
+                        <div>
+                            <span>Transport</span>
+                            <h2>Autobuz</h2>
                         </div>
+                    </div>
+
+                    {% if trip.bus %}
+                    <div class="route-info-list">
+                        <div><span>Marcă</span><strong>{{ trip.bus.brand }}</strong></div>
+                        <div><span>Model</span><strong>{{ trip.bus.model }}</strong></div>
+                        <div><span>Număr înmatriculare</span><strong>{{ trip.bus.license_plate }}</strong></div>
+                        <div><span>Capacitate</span><strong>{{ trip.bus.capacity }} locuri</strong></div>
+                        <div>
+                            <span>Status</span>
+                            {% if trip.bus.status == 'active' %}
+                                <strong class="route-status-badge is-active">Activ</strong>
+                            {% elif trip.bus.status == 'service' %}
+                                <strong class="route-status-badge is-warning">În service</strong>
+                            {% else %}
+                                <strong class="route-status-badge is-inactive">Defect</strong>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="route-empty-info">
+                        <i class="bi bi-info-circle"></i>
+                        Autobuzul va fi alocat înainte de plecare.
                     </div>
                     {% endif %}
+                </article>
 
-                    <div class="d-grid gap-2">
-                        {% if trip.schedule.departure_time < now.time and trip.date <= now.date %}
-                            <div class="alert alert-warning text-center rounded-pill fw-bold mb-2">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Cursa a plecat deja
-                            </div>
-                            <button class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
-                                <i class="bi bi-cart-x me-2"></i> Cumpărare Indisponibilă
-                            </button>
-                        {% elif trip.bus and trip.bus.status == 'active' %}
-                            <a href="{% url 'checkout' trip.id %}{% if dep_id %}?dep={{ dep_id }}&arr={{ arr_id }}{% endif %}" class="btn btn-success w-100 rounded-pill fw-bold">
-                                <i class="bi bi-cart-plus me-2"></i> Cumpără Bilete
-                            </a>
-                        {% elif not trip.bus %}
-                             <a href="{% url 'checkout' trip.id %}{% if dep_id %}?dep={{ dep_id }}&arr={{ arr_id }}{% endif %}" class="btn btn-success w-100 rounded-pill fw-bold">
-                                <i class="bi bi-cart-plus me-2"></i> Cumpără Bilete
-                            </a>
-                        {% else %}
-                            <button type="button" class="btn btn-secondary w-100 rounded-pill fw-bold" disabled>
-                                <i class="bi bi-x-circle me-2"></i> Autobuz Indisponibil
-                            </button>
-                        {% endif %}
-                        <a href="{% url 'index' %}?route_id={{ trip.schedule.route.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
-                            <i class="bi bi-map me-2"></i> Vezi pe hartă
-                        </a>
+                <article class="route-info-card">
+                    <div class="route-section-heading">
+                        <span class="route-section-icon is-amber"><i class="bi bi-person-badge"></i></span>
+                        <div>
+                            <span>Echipaj</span>
+                            <h2>Șofer</h2>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Bus & Driver -->
-        <div class="col-lg-8">
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
-                        <div class="card-body p-4">
-                            <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-bus-front me-2"></i>Autobuz</h4>
-                            {% if trip.bus %}
-                                <div class="mb-2"><strong>Marcă:</strong> {{ trip.bus.brand }}</div>
-                                <div class="mb-2"><strong>Model:</strong> {{ trip.bus.model }}</div>
-                                <div class="mb-2"><strong>Nr. Înmatriculare:</strong> {{ trip.bus.license_plate }}</div>
-                                <div class="mb-2"><strong>Capacitate:</strong> {{ trip.bus.capacity }} locuri</div>
-                                <div class="mb-0">
-                                    <strong>Status:</strong> 
-                                    {% if trip.bus.status == 'active' %}
-                                        <span class="badge bg-success">Activ</span>
-                                    {% elif trip.bus.status == 'service' %}
-                                        <span class="badge bg-warning">În service</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Defect</span>
-                                    {% endif %}
-                                </div>
+                    {% if trip.driver %}
+                    <div class="route-info-list">
+                        <div><span>Nume</span><strong>{{ trip.driver.user.first_name }} {{ trip.driver.user.last_name }}</strong></div>
+                        <div><span>Rating</span><strong>{{ trip.driver.rating }} / 5.0</strong></div>
+                        <div>
+                            <span>Status</span>
+                            {% if trip.driver.status == 'active' %}
+                                <strong class="route-status-badge is-active">Activ</strong>
                             {% else %}
-                                <p class="text-muted">Niciun autobuz alocat încă.</p>
+                                <strong class="route-status-badge is-inactive">{{ trip.driver.get_status_display }}</strong>
                             {% endif %}
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100" style="border-radius: 20px;">
-                        <div class="card-body p-4">
-                            <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-person-badge me-2"></i>Șofer</h4>
-                            {% if trip.driver %}
-                                <div class="mb-2"><strong>Nume:</strong> {{ trip.driver.user.first_name }} {{ trip.driver.user.last_name }}</div>
-                                <div class="mb-2"><strong>Rating:</strong> {{ trip.driver.rating }} / 5.0</div>
-                                <div class="mb-0">
-                                    <strong>Status:</strong> 
-                                    {% if trip.driver.status == 'active' %}
-                                        <span class="badge bg-success">Activ</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ trip.driver.get_status_display }}</span>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <p class="text-muted">Niciun șofer alocat încă.</p>
-                            {% endif %}
-                        </div>
+                    {% else %}
+                    <div class="route-empty-info">
+                        <i class="bi bi-info-circle"></i>
+                        Șoferul va fi alocat înainte de plecare.
                     </div>
-                </div>
+                    {% endif %}
+                </article>
             </div>
 
-            <!-- Full Schedule -->
-            <div class="card shadow-sm border-0 mt-4" style="border-radius: 20px;">
-                <div class="card-body p-4">
-                    <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-list-ol me-2"></i>Program Stații</h4>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th scope="col" class="border-0">#</th>
-                                    <th scope="col" class="border-0">Stație</th>
-                                    <th scope="col" class="border-0">Ora Estimată</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for s in stations %}
-                                    <tr>
-                                        <td><span class="badge bg-secondary rounded-pill">{{ forloop.counter }}</span></td>
-                                        <td class="fw-bold">{{ s.station.name }}</td>
-                                        <td>{{ s.time|date:"H:i" }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <section class="route-stations-card">
+                <div class="route-section-heading">
+                    <span class="route-section-icon"><i class="bi bi-geo-alt-fill"></i></span>
+                    <div>
+                        <span>Itinerariu</span>
+                        <h2>Programul stațiilor</h2>
                     </div>
                 </div>
-            </div>
-        </div>
+
+                <div class="route-stops-list">
+                    {% for s in stations %}
+                    <div class="route-schedule-stop{% if dep_station and s.station.id == dep_station.id %} is-selected{% endif %}{% if arr_station and s.station.id == arr_station.id %} is-selected is-destination{% endif %}">
+                        <div class="route-schedule-marker">
+                            <span>{{ forloop.counter }}</span>
+                        </div>
+                        <div class="route-schedule-name">
+                            <strong>{{ s.station.name }}</strong>
+                            {% if dep_station and s.station.id == dep_station.id %}
+                                <span class="route-stop-label">Îmbarcare</span>
+                            {% elif arr_station and s.station.id == arr_station.id %}
+                                <span class="route-stop-label is-destination">Destinație</span>
+                            {% endif %}
+                        </div>
+                        <time>{{ s.time|date:"H:i" }}</time>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
     </div>
 </div>
 {% endblock %}

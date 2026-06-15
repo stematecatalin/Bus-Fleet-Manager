@@ -372,6 +372,7 @@ def index(request):
         for rs in route_stations:
             if rs.station:
                 statii_ruta.append({
+                    "id": rs.station.id,
                     "nume": rs.station.name,
                     "lat": float(rs.station.latitude),
                     "lng": float(rs.station.longitude)

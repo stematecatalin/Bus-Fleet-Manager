@@ -1,91 +1,163 @@
 {% extends "core/base.html" %}
 
-{% block title %}AutoTrans - Finalizare Comandă{% endblock %}
+{% block title %}AutoTrans - Finalizare comandă{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow border-0" style="border-radius: 20px;">
-                <div class="card-body p-5">
-                    <h2 class="fw-bold mb-4 text-center"><i class="bi bi-cart-check me-2"></i>Finalizare Comandă</h2>
-                    <hr class="mb-5">
+<div class="container checkout-page py-4 py-md-5">
+    <nav aria-label="breadcrumb" class="checkout-breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'route_search' %}">Căutare rute</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'route_detail' trip.id %}{% if start_station and end_station %}?dep={{ start_station.id }}&arr={{ end_station.id }}{% endif %}">Detalii cursă</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Finalizare comandă</li>
+        </ol>
+    </nav>
 
-                    <div class="row mb-5">
-                        <div class="col-md-6">
-                            <h5 class="fw-bold text-primary mb-3">Rezumat Cursă</h5>
-                            <p class="mb-1"><strong>Ruta:</strong> {{ trip.schedule.route.name }}</p>
-                            <p class="mb-1"><strong>De la:</strong> {{ start_station.name|default:trip.schedule.route.stations.first.station.name }}</p>
-                            <p class="mb-1"><strong>Până la:</strong> {{ end_station.name|default:trip.schedule.route.stations.last.station.name }}</p>
-                            <p class="mb-0"><strong>Data/Ora Plecare:</strong> {{ departure_dt|date:"d M Y, H:i" }}</p>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <h5 class="fw-bold text-primary mb-3">Preț per bilet</h5>
-                            <h2 class="fw-bold text-dark" id="price-per-ticket">{{ price_per_ticket }} RON</h2>
-                            <h5 class="mt-4">Total: <span id="total-price" class="text-success fw-bold">{{ price_per_ticket }} RON</span></h5>
+    <header class="checkout-heading">
+        <div>
+            <span class="checkout-kicker"><i class="bi bi-shield-check"></i> Rezervare securizată</span>
+            <h1>Finalizează rezervarea</h1>
+            <p>Completează datele pasagerilor și verifică rezumatul înainte de confirmare.</p>
+        </div>
+        <div class="checkout-steps" aria-label="Progres rezervare">
+            <span class="is-complete"><i class="bi bi-check-lg"></i> Cursă</span>
+            <span class="is-active">2. Detalii</span>
+            <span>3. Bilet</span>
+        </div>
+    </header>
+
+    <form action="{% url 'process_payment' trip.id %}" method="POST" id="payment-form" class="checkout-layout">
+        {% csrf_token %}
+        <input type="hidden" name="start_station_id" value="{{ start_station.id|default:'' }}">
+        <input type="hidden" name="end_station_id" value="{{ end_station.id|default:'' }}">
+
+        <main class="checkout-form-column">
+            <section class="checkout-card">
+                <div class="checkout-section-heading">
+                    <span class="checkout-section-icon"><i class="bi bi-people-fill"></i></span>
+                    <div>
+                        <span>Pasageri</span>
+                        <h2>Cine călătorește?</h2>
+                    </div>
+                    <button type="button" class="btn checkout-add-passenger" id="add-passenger">
+                        <i class="bi bi-plus-lg"></i>
+                        Adaugă pasager
+                    </button>
+                </div>
+
+                <div id="passengers-container" class="checkout-passengers">
+                    <div class="passenger-row">
+                        <div class="passenger-number">1</div>
+                        <div class="passenger-field">
+                            <label class="form-label" for="passenger-1">Numele complet al pasagerului</label>
+                            <input type="text" id="passenger-1" name="passenger_names[]" class="form-control" placeholder="Ex: Ion Popescu" autocomplete="name" required>
                         </div>
                     </div>
+                </div>
+            </section>
 
-                    <form action="{% url 'process_payment' trip.id %}" method="POST" id="payment-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="start_station_id" value="{{ start_station.id|default:'' }}">
-                        <input type="hidden" name="end_station_id" value="{{ end_station.id|default:'' }}">
-                        
-                        <div class="mb-5">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h5 class="fw-bold mb-0">Detalii Pasageri</h5>
-                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-bold" id="add-passenger">
-                                    <i class="bi bi-plus-lg me-1"></i> Adaugă Pasager
-                                </button>
-                            </div>
-                            
-                            <div id="passengers-container">
-                                <div class="passenger-row mb-3 bg-light p-3 rounded-3 position-relative">
-                                    <label class="form-label fw-bold small text-uppercase">Nume Pasager 1</label>
-                                    <input type="text" name="passenger_names[]" class="form-control rounded-pill px-4" placeholder="Nume Complet" required>
-                                </div>
-                            </div>
-                        </div>
+            <section class="checkout-card">
+                <div class="checkout-section-heading">
+                    <span class="checkout-section-icon is-amber"><i class="bi bi-credit-card-fill"></i></span>
+                    <div>
+                        <span>Plată simulată</span>
+                        <h2>Informații de plată</h2>
+                    </div>
+                </div>
 
-                        <hr class="my-5">
-                        
-                        <h5 class="fw-bold mb-4">Informații Plată (Simulare)</h5>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="card_name" class="form-label">Nume pe card</label>
-                                <input type="text" class="form-control rounded-pill px-4" id="card_name" placeholder="EX: ION POPESCU" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="card_number" class="form-label">Număr card</label>
-                                <input type="text" class="form-control rounded-pill px-4" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19" required>
-                            </div>
-                        </div>
+                <div class="checkout-demo-notice">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Plata este simulată pentru proiect. Nu introduce datele unui card real.</span>
+                </div>
 
-                        <div class="row mb-5">
-                            <div class="col-md-6 mb-3">
-                                <label for="expiry" class="form-label">Dată expirare</label>
-                                <input type="text" class="form-control rounded-pill px-4" id="expiry" placeholder="MM/YY" maxlength="5" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="cvv" class="form-label">CVV</label>
-                                <input type="password" class="form-control rounded-pill px-4" id="cvv" placeholder="***" maxlength="3" required>
-                            </div>
+                <div class="checkout-payment-grid">
+                    <div class="checkout-field is-wide">
+                        <label for="card_name" class="form-label">Nume pe card</label>
+                        <input type="text" class="form-control" id="card_name" placeholder="ION POPESCU" autocomplete="cc-name" required>
+                    </div>
+                    <div class="checkout-field is-wide">
+                        <label for="card_number" class="form-label">Număr card</label>
+                        <div class="checkout-input-with-icon">
+                            <i class="bi bi-credit-card-2-front"></i>
+                            <input type="text" class="form-control" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19" inputmode="numeric" autocomplete="cc-number" required>
                         </div>
+                    </div>
+                    <div class="checkout-field">
+                        <label for="expiry" class="form-label">Data expirării</label>
+                        <input type="text" class="form-control" id="expiry" placeholder="MM/YY" maxlength="5" inputmode="numeric" autocomplete="cc-exp" required>
+                    </div>
+                    <div class="checkout-field">
+                        <label for="cvv" class="form-label">CVV</label>
+                        <input type="password" class="form-control" id="cvv" placeholder="•••" maxlength="3" inputmode="numeric" autocomplete="cc-csc" required>
+                    </div>
+                </div>
+            </section>
+        </main>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold py-3 shadow-sm">
-                                <i class="bi bi-shield-check me-2"></i> Confirmă și Plătește
-                            </button>
-                            <a href="{% url 'route_detail' trip.id %}" class="btn btn-link text-muted fw-bold">Anulează tranzacția</a>
-                        </div>
-                    </form>
+        <aside class="checkout-summary-card">
+            <div class="checkout-summary-header">
+                <span>Rezumat comandă</span>
+                <h2>{{ trip.schedule.route.name }}</h2>
+            </div>
+
+            <div class="checkout-journey">
+                <div class="checkout-journey-stop">
+                    <span class="checkout-journey-dot"></span>
+                    <div>
+                        <small>Plecare</small>
+                        <strong>{{ start_station.name|default:trip.schedule.route.stations.first.station.name }}</strong>
+                    </div>
+                </div>
+                <div class="checkout-journey-line"></div>
+                <div class="checkout-journey-stop">
+                    <span class="checkout-journey-dot is-arrival"></span>
+                    <div>
+                        <small>Destinație</small>
+                        <strong>{{ end_station.name|default:trip.schedule.route.stations.last.station.name }}</strong>
+                    </div>
                 </div>
             </div>
-            <div class="text-center mt-4">
-                <p class="text-muted small"><i class="bi bi-lock-fill me-1"></i> Aceasta este o pagină de plată simulată pentru un proiect școlar.</p>
+
+            <div class="checkout-trip-details">
+                <div>
+                    <span><i class="bi bi-calendar3"></i> Data</span>
+                    <strong>{{ departure_dt|date:"d F Y" }}</strong>
+                </div>
+                <div>
+                    <span><i class="bi bi-clock"></i> Ora plecării</span>
+                    <strong>{{ departure_dt|date:"H:i" }}</strong>
+                </div>
             </div>
-        </div>
-    </div>
+
+            <div class="checkout-price-breakdown">
+                <div>
+                    <span>Preț per bilet</span>
+                    <strong id="price-per-ticket">{{ price_per_ticket }} RON</strong>
+                </div>
+                <div>
+                    <span>Număr pasageri</span>
+                    <strong id="passenger-count">1</strong>
+                </div>
+            </div>
+
+            <div class="checkout-total">
+                <span>Total de plată</span>
+                <strong id="total-price">{{ price_per_ticket }} RON</strong>
+            </div>
+
+            <button type="submit" class="btn checkout-submit-button">
+                <i class="bi bi-shield-check"></i>
+                Confirmă și plătește
+            </button>
+            <a href="{% url 'route_detail' trip.id %}{% if start_station and end_station %}?dep={{ start_station.id }}&arr={{ end_station.id }}{% endif %}" class="checkout-cancel-link">
+                Înapoi la detaliile cursei
+            </a>
+
+            <div class="checkout-security-note">
+                <i class="bi bi-lock-fill"></i>
+                <span>Datele introduse nu sunt procesate de un serviciu real de plată.</span>
+            </div>
+        </aside>
+    </form>
 </div>
 
 <script>
@@ -93,61 +165,61 @@
     const container = document.getElementById('passengers-container');
     const addButton = document.getElementById('add-passenger');
     const totalPriceDisplay = document.getElementById('total-price');
+    const passengerCountDisplay = document.getElementById('passenger-count');
 
-    function updateTotalPrice() {
+    function updateCheckoutSummary() {
         const count = container.querySelectorAll('.passenger-row').length;
-        const total = (count * pricePerTicket).toFixed(2);
-        totalPriceDisplay.textContent = total + ' RON';
+        passengerCountDisplay.textContent = count;
+        totalPriceDisplay.textContent = (count * pricePerTicket).toFixed(2) + ' RON';
+    }
+
+    function reorderPassengers() {
+        container.querySelectorAll('.passenger-row').forEach((row, index) => {
+            const number = index + 1;
+            const input = row.querySelector('input');
+            row.querySelector('.passenger-number').textContent = number;
+            row.querySelector('label').textContent = `Numele complet al pasagerului ${number}`;
+            input.id = `passenger-${number}`;
+            row.querySelector('label').htmlFor = input.id;
+        });
     }
 
     addButton.addEventListener('click', function() {
         const passengerCount = container.querySelectorAll('.passenger-row').length + 1;
         const newRow = document.createElement('div');
-        newRow.className = 'passenger-row mb-3 bg-light p-3 rounded-3 position-relative';
+        newRow.className = 'passenger-row';
         newRow.innerHTML = `
-            <label class="form-label fw-bold small text-uppercase">Nume Pasager ${passengerCount}</label>
-            <div class="d-flex gap-2">
-                <input type="text" name="passenger_names[]" class="form-control rounded-pill px-4" placeholder="Nume Complet" required>
-                <button type="button" class="btn btn-danger btn-sm rounded-circle remove-passenger" style="width: 38px; height: 38px;">
-                    <i class="bi bi-trash"></i>
-                </button>
+            <div class="passenger-number">${passengerCount}</div>
+            <div class="passenger-field">
+                <label class="form-label" for="passenger-${passengerCount}">Numele complet al pasagerului ${passengerCount}</label>
+                <input type="text" id="passenger-${passengerCount}" name="passenger_names[]" class="form-control" placeholder="Ex: Ion Popescu" required>
             </div>
+            <button type="button" class="btn remove-passenger" aria-label="Elimină pasagerul ${passengerCount}">
+                <i class="bi bi-trash3"></i>
+            </button>
         `;
         container.appendChild(newRow);
-        updateTotalPrice();
+        updateCheckoutSummary();
 
         newRow.querySelector('.remove-passenger').addEventListener('click', function() {
             newRow.remove();
-            reorderLabels();
-            updateTotalPrice();
+            reorderPassengers();
+            updateCheckoutSummary();
         });
     });
 
-    function reorderLabels() {
-        const rows = container.querySelectorAll('.passenger-row');
-        rows.forEach((row, index) => {
-            row.querySelector('label').textContent = `Nume Pasager ${index + 1}`;
-        });
-    }
-
-    // Card formatting
-    document.getElementById('card_number').addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-        let formattedValue = '';
-        for (let i = 0; i < value.length; i++) {
-            if (i > 0 && i % 4 === 0) formattedValue += ' ';
-            formattedValue += value[i];
-        }
-        e.target.value = formattedValue;
+    document.getElementById('card_number').addEventListener('input', function(event) {
+        const value = event.target.value.replace(/\s+/g, '').replace(/[^0-9]/g, '').slice(0, 16);
+        event.target.value = value.replace(/(.{4})/g, '$1 ').trim();
     });
 
-    document.getElementById('expiry').addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 2) {
-            e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        } else {
-            e.target.value = value;
-        }
+    document.getElementById('expiry').addEventListener('input', function(event) {
+        const value = event.target.value.replace(/\D/g, '').slice(0, 4);
+        event.target.value = value.length > 2 ? value.substring(0, 2) + '/' + value.substring(2) : value;
+    });
+
+    document.getElementById('cvv').addEventListener('input', function(event) {
+        event.target.value = event.target.value.replace(/\D/g, '').slice(0, 3);
     });
 </script>
 {% endblock %}

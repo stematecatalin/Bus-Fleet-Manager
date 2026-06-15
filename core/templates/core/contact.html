@@ -1,67 +1,87 @@
 {% extends "core/base.html" %}
-{% load static %}
 
 {% block title %}Contact - AutoTrans{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow border-0 rounded-4 overflow-hidden">
-                <div class="row g-0">
-                    <div class="col-md-5 bg-success text-white p-5 d-flex flex-column justify-content-center">
-                        <h2 class="fw-bold mb-4">Contactează-ne</h2>
-                        <p class="mb-4">Suntem aici să te ajutăm cu orice informație despre rutele și serviciile noastre.</p>
-                        
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-geo-alt-fill fs-4 me-3"></i>
-                            <span>București, Romania</span>
-                        </div>
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-telephone-fill fs-4 me-3"></i>
-                            <span>+40 712 345 678</span>
-                        </div>
-                        <div class="d-flex align-items-center mb-3">
-                            <i class="bi bi-envelope-fill fs-4 me-3"></i>
-                            <span>contact@autotrans.ro</span>
-                        </div>
-                        
-                        <div class="mt-5">
-                            <h5 class="fw-bold mb-3">Urmărește-ne</h5>
-                            <div class="d-flex gap-3">
-                                <a href="#" class="text-white fs-4"><i class="bi bi-facebook"></i></a>
-                                <a href="#" class="text-white fs-4"><i class="bi bi-instagram"></i></a>
-                                <a href="#" class="text-white fs-4"><i class="bi bi-twitter-x"></i></a>
-                            </div>
-                        </div>
+<div class="container contact-page py-4 py-md-5">
+    <header class="contact-heading">
+        <span class="contact-kicker"><i class="bi bi-chat-heart-fill"></i> Suntem aici să te ajutăm</span>
+        <h1>Ai o întrebare despre călătoria ta?</h1>
+        <p>Trimite-ne un mesaj, iar echipa AutoTrans îți va răspunde cât mai curând.</p>
+    </header>
+
+    <div class="contact-shell">
+        <aside class="contact-info-panel">
+            <div>
+                <span class="contact-panel-icon"><i class="bi bi-headset"></i></span>
+                <h2>Hai să vorbim</h2>
+                <p>Te putem ajuta cu informații despre rute, bilete, rezervări și serviciile noastre.</p>
+            </div>
+
+            <div class="contact-details">
+                <a href="tel:+40712345678" class="contact-detail-item">
+                    <span><i class="bi bi-telephone-fill"></i></span>
+                    <div>
+                        <small>Telefon</small>
+                        <strong>+40 712 345 678</strong>
                     </div>
-                    
-                    <div class="col-md-7 p-5">
-                        <form method="post" novalidate>
-                            {% csrf_token %}
-                            
-                            {% for field in form %}
-                            <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ field.errors|join:", " }}
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                            
-                            <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold">
-                                    Trimite Mesajul <i class="bi bi-send-fill ms-2"></i>
-                                </button>
-                            </div>
-                        </form>
+                </a>
+                <a href="mailto:contact@autotrans.ro" class="contact-detail-item">
+                    <span><i class="bi bi-envelope-fill"></i></span>
+                    <div>
+                        <small>Email</small>
+                        <strong>contact@autotrans.ro</strong>
+                    </div>
+                </a>
+                <div class="contact-detail-item">
+                    <span><i class="bi bi-geo-alt-fill"></i></span>
+                    <div>
+                        <small>Adresă</small>
+                        <strong>București, România</strong>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="contact-availability">
+                <i class="bi bi-clock-fill"></i>
+                <div>
+                    <strong>Program suport</strong>
+                    <span>Luni - Vineri, 08:00 - 18:00</span>
+                </div>
+            </div>
+        </aside>
+
+        <section class="contact-form-panel">
+            <div class="contact-form-heading">
+                <span>Formular de contact</span>
+                <h2>Scrie-ne un mesaj</h2>
+                <p>Completează datele de mai jos și spune-ne cum te putem ajuta.</p>
+            </div>
+
+            <form method="post" novalidate class="contact-form">
+                {% csrf_token %}
+
+                <div class="contact-form-grid">
+                    {% for field in form %}
+                    <div class="contact-field{% if field.name == 'message' or field.name == 'subject' %} is-wide{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="contact-field-error">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            {{ field.errors|join:", " }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn contact-submit-button">
+                    Trimite mesajul
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </section>
     </div>
 </div>
 {% endblock %}
