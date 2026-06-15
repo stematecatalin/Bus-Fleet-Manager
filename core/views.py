@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from .models import Station, Route, RouteStation, Ticket, RouteSchedule, Trip, ChatMessage
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -38,6 +39,7 @@ from reportlab.lib.pagesizes import A4
 import hashlib
 from django.conf import settings
 from .forms import ContactForm
+from .chatbot import build_assistant_response
 
 def contact(request):
     if request.method == "POST":
@@ -508,21 +510,7 @@ def route_detail(request, trip_id):
     return render(request, "core/route_detail.html", context)
 
 
-import google.generativeai as genai
-
-# Configurare Gemini
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-
-def get_route_context():
-    rute = Route.objects.all()
-    context_text = "Informații despre rutele AutoTrans disponibile:\n"
-    for ruta in rute:
-        statii = [rs.station.name for rs in ruta.stations.all().order_by('order')]
-        context_text += f"- Ruta: {ruta.name}, Distanță: {ruta.total_distance} km, Durată: {ruta.duration}, Stații: {', '.join(statii)}\n"
-    
-    # Putem adăuga și informații despre orar dacă e necesar
-    return context_text
-
+@csrf_exempt
 def send_chat_message(request):
     if request.method == "POST":
         data = json.loads(request.body)
@@ -531,45 +519,14 @@ def send_chat_message(request):
         if not message_text:
             return JsonResponse({'success': False, 'message': 'Mesajul este gol.'})
 
-        # Salvăm mesajul utilizatorului (user poate fi None dacă nu e logat)
+        # Salvăm mesajul utilizatorului
         user = request.user if request.user.is_authenticated else None
-        
-        user_msg = ChatMessage.objects.create(
-            user=user,
-            message=message_text,
-            is_from_support=False
-        )
+        user_msg = ChatMessage.objects.create(user=user, message=message_text, is_from_support=False)
 
-        # Pregătire context pentru AI
-        route_info = get_route_context()
-        prompt = f"""
-        Ești asistentul virtual AutoTrans, o platformă de management al flotei de autobuze. 
-        Folosește următoarele informații pentru a răspunde utilizatorului într-un mod politicos, util și concis.
-        Răspunde în limba română.
-        
-        CONTEXT RUTE:
-        {route_info}
-        
-        UTILIZATOR: {message_text}
-        """
+        assistant_response = build_assistant_response(message_text, user=user)
+        support_reply = assistant_response['text']
 
-        try:
-            # Folosim modelul detectat ca fiind disponibil (Gemini 2.0 Flash)
-            model = genai.GenerativeModel('gemini-2.0-flash')
-            response = model.generate_content(prompt)
-            support_reply = response.text.strip()
-        except Exception as e:
-            print(f"Error calling Gemini: {e}")
-            try:
-                # Fallback la versiunea "latest" raportată de API
-                model = genai.GenerativeModel('gemini-flash-latest')
-                response = model.generate_content(prompt)
-                support_reply = response.text.strip()
-            except Exception as e2:
-                print(f"Error calling Gemini (fallback): {e2}")
-                support_reply = "Îmi pare rău, am întâmpinat o eroare tehnică la conectarea cu asistentul AI. Vă rugăm să reveniți mai târziu."
-
-        # Salvăm răspunsul AI
+        # Salvăm răspunsul în DB
         ChatMessage.objects.create(
             user=user,
             message=support_reply,
@@ -582,17 +539,17 @@ def send_chat_message(request):
                 'text': user_msg.message,
                 'created_at': timezone.localtime(user_msg.created_at).strftime('%H:%M')
             },
-            'support_message': {
-                'text': support_reply,
-                'created_at': timezone.localtime(timezone.now()).strftime('%H:%M')
-            }
+             'support_message': {
+                 'text': support_reply,
+                 'journeys': assistant_response['journeys'],
+                 'created_at': timezone.localtime(timezone.now()).strftime('%H:%M')
+             }
         })
     return JsonResponse({'success': False, 'message': 'Metodă nepermisă.'})
 
-
 def get_chat_history(request):
     if not request.user.is_authenticated:
-        return JsonResponse({'history': []}) # Sau am putea folosi session_key pentru istoric guest
+        return JsonResponse({'history': []})
         
     messages = ChatMessage.objects.filter(user=request.user).order_by('created_at')
     history = []
