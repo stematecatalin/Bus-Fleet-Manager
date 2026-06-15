@@ -3,20 +3,23 @@
 {% block title %}AutoTrans - Caută Rute{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row mb-5">
-        <div class="col-12 text-center">
-            <h1 class="display-4 fw-bold text-dark">Caută Ruta Ta</h1>
-            <p class="text-muted fs-5">Introdu stația de plecare, cea de sosire și data pentru a găsi cursele disponibile.</p>
-        </div>
-    </div>
+<div class="route-search-page py-4 py-md-5">
+    <header class="route-search-heading">
+        <span><i class="bi bi-signpost-split-fill"></i> Planificator AutoTrans</span>
+        <h1>Unde vrei să călătorești?</h1>
+        <p>Alege plecarea, destinația și data. Îți arătăm cursele disponibile și orele exacte.</p>
+    </header>
 
-    <div class="card shadow-sm border-0 mb-5" style="border-radius: 20px;">
-        <div class="card-body p-4">
-            <form method="GET" action="{% url 'route_search' %}" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="departure" class="form-label fw-bold">Plecare din:</label>
-                    <select name="departure" id="departure" class="form-select rounded-pill">
+    <div class="route-search-panel">
+        <div class="route-search-panel-icon d-none d-lg-grid"><i class="bi bi-bus-front-fill"></i></div>
+        <div class="route-search-panel-copy d-none d-lg-block">
+            <strong>Găsește cursa potrivită</strong>
+            <span>Completează cele trei câmpuri</span>
+        </div>
+        <form method="GET" action="{% url 'route_search' %}" class="route-search-form">
+                <div class="route-search-field">
+                    <label for="departure"><i class="bi bi-geo-alt"></i> Plecare</label>
+                    <select name="departure" id="departure" class="form-select">
                         <option value="">Alege stația...</option>
                         {% for station in stations %}
                             <option value="{{ station.id }}" {% if departure == station.id|stringformat:"s" %}selected{% endif %}>
@@ -25,9 +28,9 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="arrival" class="form-label fw-bold">Sosire la:</label>
-                    <select name="arrival" id="arrival" class="form-select rounded-pill">
+                <div class="route-search-field">
+                    <label for="arrival"><i class="bi bi-geo-alt-fill"></i> Destinație</label>
+                    <select name="arrival" id="arrival" class="form-select">
                         <option value="">Alege stația...</option>
                         {% for station in stations %}
                             <option value="{{ station.id }}" {% if arrival == station.id|stringformat:"s" %}selected{% endif %} data-original-name="{{ station.name }}">
@@ -36,21 +39,16 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="date" class="form-label fw-bold">Data:</label>
-                    <input type="date" name="date" id="date" class="form-control rounded-pill shadow-sm" 
-                           style="border: 2px solid #dee2e6; transition: border-color 0.3s;"
-                           onfocus="this.style.borderColor='#0d6efd'" 
-                           onblur="this.style.borderColor='#dee2e6'"
-                           value="{{ date }}" required>
+                <div class="route-search-field">
+                    <label for="date"><i class="bi bi-calendar3"></i> Data călătoriei</label>
+                    <input type="date" name="date" id="date" class="form-control" value="{{ date }}" required>
                 </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">
-                        <i class="bi bi-search me-2"></i> Caută
+                <div class="route-search-submit">
+                    <button type="submit">
+                        <i class="bi bi-search"></i> Caută curse
                     </button>
                 </div>
             </form>
-        </div>
     </div>
 
     <script>
@@ -136,60 +134,60 @@
     </script>
 
     {% if departure and arrival and date %}
-        <div class="row">
-            <div class="col-12">
-                <h3 class="mb-4">Rezultate căutare pentru {{ date }}</h3>
+        <section class="route-results-section">
+            <div class="route-results-heading">
+                <div>
+                    <span>Rezultatele căutării</span>
+                    <h2>{{ dep_name_selected }} <i class="bi bi-arrow-right"></i> {{ arr_name_selected }}</h2>
+                </div>
+                <div class="route-results-date"><i class="bi bi-calendar-check"></i> {{ date }}</div>
+            </div>
                 {% if results %}
-                    <div class="list-group shadow-sm">
+                    <div class="route-results-list">
                         {% for item in results %}
-                            <div class="list-group-item list-group-item-action p-4 border-start-0 border-end-0 border-top-0 mb-3 shadow-sm rounded-4">
-                                <div class="row align-items-center">
-                                    <!-- Info Section -->
-                                    <div class="col">
-                                        <h5 class="mb-1 fw-bold text-primary">
-                                            {{ item.dep_name }} <i class="bi bi-arrow-right mx-1"></i> {{ item.arr_name }}
-                                        </h5>
-                                        <div class="mb-2">
-                                            <span class="badge bg-light text-dark border"><i class="bi bi-signpost-2 me-1"></i> Ruta: {{ item.trip.schedule.route.name }}</span>
+                            <article class="route-result-card">
+                                <div class="route-result-main">
+                                    <div class="route-result-topline">
+                                        <span><i class="bi bi-signpost-2"></i> {{ item.trip.schedule.route.name }}</span>
+                                        <span class="route-distance">{{ item.trip.schedule.route.total_distance }} km</span>
+                                    </div>
+                                    <div class="route-result-timeline">
+                                        <div class="route-time-block">
+                                            <strong>{{ item.departure_time|date:"H:i" }}</strong>
+                                            <span>{{ item.dep_name }}</span>
                                         </div>
-                                        <div class="mb-2 text-dark">
-                                            <i class="bi bi-clock me-2 text-primary"></i>
-                                            Plecare: <strong>{{ item.departure_time|date:"H:i" }}</strong> 
-                                            <span class="mx-2 text-muted">|</span> 
-                                            Sosire: <strong>{{ item.arrival_time|date:"H:i" }}</strong>
+                                        <div class="route-time-line">
+                                            <span></span><i class="bi bi-bus-front-fill"></i><span></span>
                                         </div>
-                                        <div class="small text-secondary">
-                                            <i class="bi bi-bus-front me-1"></i>
-                                            Autobuz: {% if item.trip.bus %}{{ item.trip.bus.brand }} {{ item.trip.bus.model }}{% else %}Nespecificat{% endif %}
+                                        <div class="route-time-block route-time-arrival">
+                                            <strong>{{ item.arrival_time|date:"H:i" }}</strong>
+                                            <span>{{ item.arr_name }}</span>
                                         </div>
                                     </div>
-
-                                    <!-- Action Section -->
-                                    <div class="col-auto text-end ps-4">
-                                        <div class="mb-3">
-                                            <span class="badge bg-success fs-6 rounded-pill px-3">{{ item.trip.schedule.route.total_distance }} km</span>
-                                        </div>
-                                        <div class="d-flex flex-column gap-2">
-                                            <a href="{% url 'route_detail' item.trip.id %}?dep={{ item.dep_id }}&arr={{ item.arr_id }}" class="btn btn-primary rounded-pill px-4 fw-bold">
-                                                <i class="bi bi-cart-plus me-2"></i>Cumpără Bilet
-                                            </a>
-                                            <a href="{% url 'index' %}?route_id={{ item.trip.schedule.route.id }}" class="btn btn-outline-primary rounded-pill px-4 btn-sm">
-                                                <i class="bi bi-map me-2"></i>Vezi Hartă
-                                            </a>
-                                        </div>
+                                    <div class="route-result-bus">
+                                        <i class="bi bi-bus-front"></i>
+                                        {% if item.trip.bus %}{{ item.trip.bus.brand }} {{ item.trip.bus.model }}{% else %}Autobuz în curs de alocare{% endif %}
                                     </div>
                                 </div>
-                            </div>
+                                <div class="route-result-actions">
+                                    <a href="{% url 'route_detail' item.trip.id %}?dep={{ item.dep_id }}&arr={{ item.arr_id }}" class="route-buy-button">
+                                        <i class="bi bi-ticket-perforated"></i> Cumpără bilet
+                                    </a>
+                                    <a href="{% url 'index' %}?route_id={{ item.trip.schedule.route.id }}" class="route-map-button">
+                                        <i class="bi bi-map"></i> Vezi pe hartă
+                                    </a>
+                                </div>
+                            </article>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="alert alert-info rounded-4 p-4 text-center">
-                        <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
-                        Nu am găsit nicio cursă disponibilă între aceste stații pentru data selectată.
+                    <div class="route-empty-state">
+                        <span><i class="bi bi-calendar-x"></i></span>
+                        <h3>Nicio cursă disponibilă</h3>
+                        <p>Nu am găsit plecări pentru această rută la data selectată. Încearcă o altă zi.</p>
                     </div>
                 {% endif %}
-            </div>
-        </div>
+        </section>
     {% endif %}
 </div>
 {% endblock %}
