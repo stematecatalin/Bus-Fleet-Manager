@@ -14,7 +14,7 @@
         <div class="route-search-panel-icon d-none d-lg-grid"><i class="bi bi-bus-front-fill"></i></div>
         <div class="route-search-panel-copy d-none d-lg-block">
             <strong>Găsește cursa potrivită</strong>
-            <span>Completează cele trei câmpuri</span>
+            <span>Alege cel puțin plecarea și data</span>
         </div>
         <form method="GET" action="{% url 'route_search' %}" class="route-search-form">
                 <div class="route-search-field">
@@ -133,16 +133,22 @@
         });
     </script>
 
-    {% if departure and arrival and date %}
+    {% if departure and date %}
         <section class="route-results-section">
             <div class="route-results-heading">
                 <div>
                     <span>Rezultatele căutării</span>
-                    <h2>{{ dep_name_selected }} <i class="bi bi-arrow-right"></i> {{ arr_name_selected }}</h2>
+                    <h2>{{ dep_name_selected }}{% if arrival %} <i class="bi bi-arrow-right"></i> {{ arr_name_selected }}{% else %} <i class="bi bi-arrow-right"></i> Toate destinațiile{% endif %}</h2>
                 </div>
                 <div class="route-results-date"><i class="bi bi-calendar-check"></i> {{ date }}</div>
             </div>
                 {% if results %}
+                    {% if not arrival %}
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Vă afișăm toate cursele care trec prin <strong>{{ dep_name_selected }}</strong>. Selectați o cursă pentru a vedea toate stațiile disponibile.
+                    </div>
+                    {% endif %}
                     <div class="route-results-list">
                         {% for item in results %}
                             <article class="route-result-card">
@@ -161,7 +167,7 @@
                                         </div>
                                         <div class="route-time-block route-time-arrival">
                                             <strong>{{ item.arrival_time|date:"H:i" }}</strong>
-                                            <span>{{ item.arr_name }}</span>
+                                            <span>{{ item.arr_name }}{% if not arrival %} (Destinație finală){% endif %}</span>
                                         </div>
                                     </div>
                                     <div class="route-result-bus">
@@ -171,7 +177,7 @@
                                 </div>
                                 <div class="route-result-actions">
                                     <a href="{% url 'route_detail' item.trip.id %}?dep={{ item.dep_id }}&arr={{ item.arr_id }}" class="route-buy-button">
-                                        <i class="bi bi-ticket-perforated"></i> Cumpără bilet
+                                        <i class="bi bi-ticket-perforated"></i> {% if arrival %}Cumpără bilet{% else %}Detalii și bilete{% endif %}
                                     </a>
                                     <a href="{% url 'index' %}?route_id={{ item.trip.schedule.route.id }}" class="route-map-button">
                                         <i class="bi bi-map"></i> Vezi pe hartă

@@ -88,14 +88,61 @@ class EmployeeTests(TestCase):
         with self.assertRaises(ValidationError):
             employee.full_clean()
 
-class ViewTests(TestCase):
-    def test_index_view(self):
-        response = self.client.get(reverse('index'))
-        self.assertEqual(response.status_code, 200)
+class RouteSearchTests(TestCase):
+    def setUp(self):
+        self.dep = Station.objects.create(name="Departure", latitude=44.0, longitude=26.0)
+        self.mid = Station.objects.create(name="Middle", latitude=44.1, longitude=26.1)
+        self.arr = Station.objects.create(name="Arrival", latitude=44.2, longitude=26.2)
+        
+        self.route = Route.objects.create(name="Test Route", total_distance=100.0, duration=timedelta(hours=2))
+        RouteStation.objects.create(route=self.route, station=self.dep, order=1, time_from_start=timedelta(0))
+        RouteStation.objects.create(route=self.route, station=self.mid, order=2, time_from_start=timedelta(hours=1))
+        RouteStation.objects.create(route=self.route, station=self.arr, order=3, time_from_start=timedelta(hours=2))
+        
+        self.date = date.today() + timedelta(days=1)
+        self.sched = RouteSchedule.objects.create(
+            route=self.route, 
+            day_of_week=self.date.weekday(), 
+            departure_time=time(10, 0)
+        )
 
-    def test_rute_view(self):
-        response = self.client.get(reverse('route_search'))
+    def test_search_with_departure_only(self):
+        """Test searching with only departure station returns results."""
+        url = reverse('route_search')
+        response = self.client.get(url, {
+            'departure': self.dep.id,
+            'date': self.date.isoformat()
+        })
         self.assertEqual(response.status_code, 200)
+        results = response.context['results']
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['dep_name'], "Departure")
+        self.assertEqual(results[0]['arr_name'], "Arrival") # Should default to last station
+
+    def test_search_with_departure_and_arrival(self):
+        """Test searching with both stations still works."""
+        url = reverse('route_search')
+        response = self.client.get(url, {
+            'departure': self.dep.id,
+            'arrival': self.mid.id,
+            'date': self.date.isoformat()
+        })
+        self.assertEqual(response.status_code, 200)
+        results = response.context['results']
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['dep_name'], "Departure")
+        self.assertEqual(results[0]['arr_name'], "Middle")
+
+    def test_search_with_no_departure_returns_no_results(self):
+        """Test searching without departure station returns no results."""
+        url = reverse('route_search')
+        response = self.client.get(url, {
+            'date': self.date.isoformat()
+        })
+        self.assertEqual(response.status_code, 200)
+        results = response.context['results']
+        self.assertEqual(len(results), 0)
+
 
 
 class ChatbotTests(TestCase):

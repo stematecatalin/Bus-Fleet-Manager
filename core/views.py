@@ -406,14 +406,20 @@ def route_search(request):
     # Obținem timpul local corect (Bucharest)
     now_local = timezone.localtime(timezone.now())
     
-    if departure_id and arrival_id and search_date_str:
+    if departure_id and search_date_str:
         try:
             search_date = datetime.strptime(search_date_str, '%Y-%m-%d').date()
             schedules = RouteSchedule.objects.filter(day_of_week=search_date.weekday())
             for sched in schedules:
                 rs_dep = RouteStation.objects.filter(route=sched.route, station_id=departure_id).first()
                 if rs_dep:
-                    rs_arr = RouteStation.objects.filter(route=sched.route, station_id=arrival_id, order__gt=rs_dep.order).first()
+                    # Dacă avem destinație, căutăm stația de sosire după cea de plecare
+                    if arrival_id:
+                        rs_arr = RouteStation.objects.filter(route=sched.route, station_id=arrival_id, order__gt=rs_dep.order).first()
+                    else:
+                        # Dacă nu avem destinație, luăm ultima stație a rutei ca punct de referință
+                        rs_arr = RouteStation.objects.filter(route=sched.route, order__gt=rs_dep.order).order_by('-order').first()
+                    
                     if rs_arr:
                         # Combinăm data căutată cu ora plecării și adunăm timpul până la stația de îmbarcare
                         start_dt = datetime.combine(search_date, sched.departure_time)
@@ -430,7 +436,7 @@ def route_search(request):
                                 'departure_time': dep_time_dt, 
                                 'arrival_time': arr_time_dt, 
                                 'dep_id': departure_id, 
-                                'arr_id': arrival_id,
+                                'arr_id': rs_arr.station.id,
                                 'dep_name': rs_dep.station.name,
                                 'arr_name': rs_arr.station.name
                             })
