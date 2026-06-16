@@ -17,20 +17,31 @@
         <!-- Route Details -->
         <div class="row align-items-center mb-4 text-center">
             <div class="col-5">
-                <h5 class="fw-bold mb-0 text-truncate">{{ route_group.list.0.start_station.name|default:route_group.grouper.schedule.route.stations.first.station.name }}</h5>
+                <h6 class="fw-bold mb-1" style="min-height: 3em; display: flex; align-items: center; justify-content: center;">
+                    {% if route_group.list.0.start_station %}
+                        {{ route_group.list.0.start_station.name_formatted|safe }}
+                    {% else %}
+                        {{ route_group.grouper.schedule.route.stations.first.station.name_formatted|safe }}
+                    {% endif %}
+                </h6>
                 <div class="text-primary fs-4 fw-black">
-                    {% with start_rs=route_group.list.0.trip.schedule.route.stations.first %}
-                        <!-- Nota: Ora reala depinde de start_station, calculam simplificat pt card -->
-                        {{ route_group.grouper.schedule.departure_time|date:"H:i" }}
-                    {% endwith %}
+                    {{ route_group.list.0.get_departure_time|date:"H:i" }}
                 </div>
             </div>
             <div class="col-2">
                 <i class="bi bi-bus-front text-primary fs-3"></i>
             </div>
             <div class="col-5">
-                <h5 class="fw-bold mb-0 text-truncate">{{ route_group.list.0.end_station.name|default:route_group.grouper.schedule.route.stations.last.station.name }}</h5>
-                <div class="text-danger fs-4 fw-black">---</div>
+                <h6 class="fw-bold mb-1" style="min-height: 3em; display: flex; align-items: center; justify-content: center;">
+                    {% if route_group.list.0.end_station %}
+                        {{ route_group.list.0.end_station.name_formatted|safe }}
+                    {% else %}
+                        {{ route_group.grouper.schedule.route.stations.last.station.name_formatted|safe }}
+                    {% endif %}
+                </h6>
+                <div class="text-danger fs-4 fw-black">
+                    {{ route_group.list.0.get_arrival_time|date:"H:i"|default:"---" }}
+                </div>
             </div>
         </div>
 

@@ -9,41 +9,795 @@
     100%{ background-position: 0% 50%;}
 }
 .navbar {
-    background: #419140;
-    background: linear-gradient(-45deg, rgba(65, 145, 64, 1) 0%, rgba(58, 133, 108, 1) 100%);
-    background-size:400% 400%;
-    animation: gradient-move 15s ease infinite;
+    background: #051409; /* Midnight Forest */
+    background: linear-gradient(135deg, #051409 0%, #0c2b16 100%);
+    border-bottom: 1px solid rgba(46, 125, 50, 0.2);
+    z-index: 9999 !important;
+    padding: 12px 0;
 }
 
-/* --- REPARARE TOTALA BUTON LOGIN --- */
+.navbar-brand {
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.02);
+}
+
+.hero-section {
+    /* No scale here anymore */
+}
+
+.hero-section .btn-light {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hero-section .btn-light:hover {
+    transform: scale(1.08) translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+}
+
+.brand-icon {
+    background: rgba(255, 255, 255, 0.1);
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-text-new {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar .container {
+    display: flex;
+    align-items: center; /* Centrare verticală forțată pentru toate elementele */
+}
+
+.nav-link {
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 8px 16px !important;
+    margin: 0 2px;
+    border-radius: 12px;
+    transition: all 0.3s ease !important;
+    display: flex;
+    align-items: center;
+    height: 100%; /* Ocupă toată înălțimea pentru aliniere */
+}
+
+.nav-link:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.brand-text span {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* --- ACCOUNT DROPDOWN MODERNIZATION --- */
 
 .login-btn {
-    transition: all .2s ease-in-out;
-    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
-/* Resetam tot grupul sa foloseasca ACELASI ALB (cel de la Bootstrap) */
-.login-btn .btn-light, 
-.login-btn .btn-light:hover, 
-.login-btn .btn-light:active,
-.login-btn .login-icon-wrapper {
-    background-color: #f8f9fa !important; /* Griul oficial Bootstrap btn-light */
-    border-color: #f8f9fa !important;
-    color: #212529 !important;
+.login-btn .dropdown-toggle::after {
+    display: none !important;
 }
 
-/* Scoatem orice umbra sau bordura care ar putea crea diferente */
-.login-btn .login-icon-wrapper {
+.login-btn .btn-light {
+    background: #ffffff !important;
     border: none !important;
+    padding: 6px 6px 6px 6px !important; /* Ajustat pentru centrare */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+    transition: all 0.3s ease !important;
+    position: relative;
+    z-index: 10002 !important;
+    min-width: 220px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* SINGURA regula de inegrire pentru tot grupul (text + cerc + iconita) */
-.login-btn:hover {
-    filter: brightness(0.90); /* Inegrim totul uniform (buton + cerc) cu 10% */
-
+.user-email-name {
+    flex: 1;
+    text-align: center;
+    margin-left: 40px; /* Compensează lățimea iconiței din dreapta pentru centrare perfectă */
+    font-size: 0.95rem;
 }
 
-.login-btn:active {
-    filter: brightness(0.80); 
-    transform: scale(0.98);
+/* Efect de hover doar când meniul NU este deschis */
+.login-btn:not(.show):hover {
+    transform: translateY(-2px);
+}
+
+.login-btn:hover .btn-light {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+}
+
+.login-icon-wrapper {
+    background: linear-gradient(135deg, #419140 0%, #2e7d32 100%) !important;
+    color: white !important;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.login-icon-wrapper.admin-wrapper {
+    background: #FFD700; /* Fallback */
+    background: linear-gradient(135deg, #FFD700 0%, #FF4500 100%) !important; 
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.5), 0 0 20px rgba(255, 69, 0, 0.4) !important;
+}
+
+/* Dropdown Menu - Seamless Connection */
+.dropdown-menu {
+    border: none !important;
+    border-radius: 25px !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12) !important;
+    padding: 60px 10px 12px 10px !important;
+    margin-top: -52px !important;
+    z-index: 10001 !important;
+    background: #ffffff;
+    width: 100% !important; /* Lățime exactă cât butonul */
+    min-width: 220px !important;
+    border-top-right-radius: 30px !important;
+    border-top-left-radius: 30px !important;
+    overflow: hidden;
+}
+
+.dropdown-item {
+    border-radius: 15px !important;
+    padding: 10px 12px !important;
+    font-weight: 600 !important;
+    color: #444 !important;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    white-space: normal; /* Permite textului lung să se așeze pe mai multe rânduri dacă e cazul */
+}
+
+.dropdown-item i {
+    font-size: 1.1rem;
+    color: #2e7d32;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f7f0 !important;
+    color: #2e7d32 !important;
+    transform: translateX(5px);
+}
+
+.dropdown-item:hover i {
+    transform: scale(1.2);
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: #fff5f5 !important;
+    color: #dc3545 !important;
+}
+
+.dropdown-divider {
+    margin: 8px 10px !important;
+    opacity: 0.08 !important;
+}
+
+/* --- FLOATING CHAT BUTTON --- */
+.chat-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(145deg, #43a047 0%, #1b5e20 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 12px 30px rgba(27, 94, 32, 0.35);
+    z-index: 10000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+    text-decoration: none;
+}
+
+.chat-button-status {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    border: 3px solid white;
+    border-radius: 50%;
+    background: #7cff72;
+}
+
+.chat-button:hover {
+    transform: scale(1.1) rotate(5deg);
+    color: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+.chat-button:active {
+    transform: scale(0.9);
+}
+
+/* --- CHATBOX WINDOW --- */
+.chat-window {
+    position: fixed;
+    bottom: 30px; /* Aliniat cu butonul */
+    right: 30px;
+    width: min(430px, calc(100vw - 32px));
+    height: min(680px, calc(100vh - 60px));
+    background: #f5f7f5;
+    border: 1px solid rgba(27, 94, 32, 0.12);
+    border-radius: 26px;
+    box-shadow: 0 24px 70px rgba(18, 51, 26, 0.24);
+    z-index: 10001;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    transform-origin: bottom right;
+    animation: chatOpen 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.chat-window.active {
+    display: flex;
+}
+
+.chat-window.closing {
+    animation: chatClose 0.3s ease forwards;
+}
+
+@keyframes chatOpen {
+    from {
+        opacity: 0;
+        transform: scale(0.3) translateY(100px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes chatClose {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.3) translateY(100px);
+    }
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #287b35 0%, #164d25 100%);
+    color: white;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-assistant-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-assistant-avatar {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    color: #1b5e20;
+    background: white;
+    font-size: 21px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+}
+
+.chat-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.chat-assistant-identity span {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.76);
+}
+
+.chat-assistant-identity span i {
+    margin-right: 4px;
+    color: #88ef85;
+    font-size: 0.45rem;
+    vertical-align: middle;
+}
+
+.chat-close-btn {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: white;
+    background: rgba(255, 255, 255, 0.12);
+    transition: 0.2s ease;
+}
+
+.chat-close-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: rotate(5deg);
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background:
+        radial-gradient(circle at top right, rgba(76, 175, 80, 0.08), transparent 38%),
+        #f5f7f5;
+}
+
+#chatHistory {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.message {
+    max-width: 86%;
+    padding: 11px 14px;
+    border-radius: 17px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    position: relative;
+    box-shadow: 0 5px 18px rgba(22, 65, 31, 0.06);
+    word-wrap: break-word;
+    text-align: left; /* Revenim la aliniere normală */
+}
+
+.message-body {
+    white-space: pre-wrap;
+}
+
+/* Excepție pentru mesaje foarte scurte să nu arate ciudat justify */
+.message:has(.message-body:empty) {
+    text-align: left;
+}
+
+.message-user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #318b42 0%, #1d642d 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message-support {
+    align-self: flex-start;
+    background: white;
+    color: #223128;
+    border-bottom-left-radius: 4px;
+    border: 1px solid #e3ebe4;
+}
+
+.message-with-journeys {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    margin-top: 6px;
+    display: block;
+    text-align: right;
+}
+
+.message-user .message-time {
+    color: rgba(255,255,255,0.8);
+}
+
+.message strong {
+    font-weight: 700;
+}
+
+.message ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.message li {
+    margin-bottom: 4px;
+}
+
+.chat-link {
+    color: #2e7d32;
+    text-decoration: underline;
+    font-weight: 700;
+    word-break: break-all;
+}
+
+.chat-link:hover {
+    color: #1b5e20;
+}
+
+.chat-input-area {
+    padding: 12px 14px 15px;
+    border-top: 1px solid #e4ebe5;
+    display: flex;
+    gap: 10px;
+    background: white;
+}
+
+.chat-input {
+    flex: 1;
+    border: 1px solid #dce5dd;
+    border-radius: 25px;
+    padding: 11px 16px;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.chat-input:focus {
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+.chat-send-btn {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    width: 43px;
+    height: 43px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.chat-suggestions {
+    display: block;
+    padding: 9px 14px 7px;
+    border-top: 1px solid #edf2ed;
+    background: white;
+}
+
+.chat-suggestions-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #7c8980;
+    font-size: 0.63rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.chat-suggestions-track {
+    display: flex;
+    gap: 7px;
+    padding-bottom: 3px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #b8ceb9 transparent;
+}
+
+.chat-suggestions-track::-webkit-scrollbar {
+    height: 4px;
+}
+
+.chat-suggestions-track::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #b8ceb9;
+}
+
+.chat-suggestions button {
+    flex: 0 0 auto;
+    padding: 7px 11px;
+    border: 1px solid #d8e7da;
+    border-radius: 999px;
+    color: #266333;
+    background: #f6fbf6;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.chat-suggestions button:hover {
+    border-color: #70a877;
+    background: #eaf6eb;
+    transform: translateY(-1px);
+}
+
+.journey-card {
+    margin-top: 10px;
+    overflow: hidden;
+    border: 1px solid #dce8de;
+    border-radius: 17px;
+    background: white;
+    box-shadow: 0 10px 26px rgba(28, 78, 38, 0.09);
+}
+
+.journey-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #edf2ed;
+}
+
+.journey-option {
+    color: #708075;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.journey-type {
+    padding: 4px 8px;
+    border-radius: 999px;
+    color: #21612d;
+    background: #e9f6eb;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.journey-summary {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 12px;
+    background: linear-gradient(135deg, #f6fbf6, #ffffff);
+}
+
+.journey-summary > div:not(.journey-summary-line) {
+    display: flex;
+    flex-direction: column;
+}
+
+.journey-summary strong {
+    color: #173d21;
+    font-size: 1.1rem;
+}
+
+.journey-summary span:not(.journey-duration) {
+    color: #849087;
+    font-size: 0.64rem;
+}
+
+.journey-summary-line {
+    position: relative;
+    height: 1px;
+    background: #a9c9ae;
+    text-align: center;
+}
+
+.journey-summary-line i {
+    position: relative;
+    top: -10px;
+    padding: 0 6px;
+    color: #2e7d32;
+    background: #fafdfa;
+}
+
+.journey-duration {
+    padding: 5px 7px;
+    border-radius: 8px;
+    color: #526158;
+    background: #f0f3f0;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.journey-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    border-top: 1px solid #edf2ed;
+    border-bottom: 1px solid #edf2ed;
+    color: #66736a;
+    background: #fbfdfb;
+    font-size: 0.72rem;
+}
+
+.journey-price-row strong {
+    color: #1f6d2d;
+    font-size: 0.95rem;
+}
+
+.journey-legs {
+    padding: 2px 12px 12px;
+}
+
+.journey-leg {
+    display: grid;
+    grid-template-columns: 13px 1fr;
+    gap: 9px;
+    padding-top: 10px;
+}
+
+.journey-leg + .journey-leg {
+    margin-top: 10px;
+    border-top: 1px dashed #d8e1d9;
+}
+
+.journey-leg-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px 0 35px;
+}
+
+.journey-leg-marker span {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border: 2px solid #2e7d32;
+    border-radius: 50%;
+    background: white;
+}
+
+.journey-leg-marker i {
+    width: 2px;
+    flex: 1;
+    min-height: 25px;
+    background: #b8d1bc;
+}
+
+.journey-stop-row {
+    display: grid;
+    grid-template-columns: 43px 1fr;
+    gap: 6px;
+    margin-bottom: 9px;
+    line-height: 1.25;
+}
+
+.journey-stop-row strong {
+    color: #235e2e;
+}
+
+.journey-stop-row strong small {
+    display: block;
+    margin-top: 2px;
+    color: #849087;
+    font-size: 0.56rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.journey-stop-row span {
+    color: #36443a;
+    font-size: 0.78rem;
+}
+
+.journey-leg-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 2px 0 7px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: #66736a;
+    background: #f5f8f5;
+    font-size: 0.68rem;
+}
+
+.journey-leg-meta strong {
+    color: #256b31;
+}
+
+.journey-book-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    color: white;
+    background: #2e7d32;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.journey-book-btn:hover {
+    color: white;
+    background: #1b5e20;
+}
+
+@media (max-width: 575.98px) {
+    .chat-window {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
+        height: calc(100vh - 24px);
+        border-radius: 22px;
+    }
+
+    .chat-button {
+        right: 18px;
+        bottom: 18px;
+    }
+}
+
+.chat-send-btn:hover {
+    background: #1b5e20;
+    transform: scale(1.1);
+}
+
+/* --- TYPING INDICATOR --- */
+.typing-indicator {
+    align-self: flex-start;
+    background: white;
+    padding: 8px 15px;
+    border-radius: 15px;
+    border-bottom-left-radius: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    width: fit-content;
+    margin-bottom: 5px;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background: #2e7d32;
+    display: inline-block;
+    border-radius: 50%;
+    margin: 0 2px;
+    opacity: 0.4;
+    animation: typing 1s infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+.message h3 {
+    font-size: 1.1rem;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-weight: 800;
+    color: #2e7d32;
+}
+
+.message hr {
+    margin: 10px 0;
+    border: 0;
+    border-top: 1px solid #ddd;
+    opacity: 1;
+}
+
+@keyframes typing {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-5px); opacity: 1; }
 }

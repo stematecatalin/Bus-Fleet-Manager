@@ -48,6 +48,25 @@
                         <span class="fs-5 fw-bold text-success">{{ trip.schedule.departure_time|date:"H:i" }}</span>
                     </div>
 
+                    {% if dep_station %}
+                    <div class="alert alert-info border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-geo-alt-fill me-2"></i>Segmentul tău:</h6>
+                        <div class="d-flex flex-column gap-2 small">
+                            <div>
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Îmbarcare: <strong>{{ dep_station.name }}</strong>
+                                {% if is_intermediate_pickup %}
+                                    <br><span class="text-primary fw-bold ms-3">(Stație Intermediară)</span>
+                                {% else %}
+                                    <br><span class="text-success fw-bold ms-3">(Capăt de linie)</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <i class="bi bi-box-arrow-left me-1"></i> Debarcare: <strong>{{ arr_station.name }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="d-grid gap-2">
                         {% if trip.schedule.departure_time < now.time and trip.date <= now.date %}
                             <div class="alert alert-warning text-center rounded-pill fw-bold mb-2">

@@ -50,54 +50,173 @@
     <!-- Assigned Trips -->
     <div class="row">
         <div class="col-12">
+            <!-- TODAY'S TRIPS - UPCOMING -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 25px;">
+                <div class="card-header bg-white py-4 border-0 d-flex justify-content-between align-items-center">
+                    <h4 class="fw-bold mb-0 text-success"><i class="bi bi-clock-history me-2"></i>Curse de efectuat azi</h4>
+                    <span class="badge bg-success rounded-pill px-3">{{ today|date:"d M Y" }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-3">Ora</th>
+                                    <th class="py-3">Rută</th>
+                                    <th class="py-3">Autobuz</th>
+                                    <th class="py-3">Pasageri</th>
+                                    <th class="pe-4 py-3 text-end">Acțiuni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trip in assigned_trips %}
+                                    {% if trip.date == today and trip.schedule.departure_time >= now.time %}
+                                        <tr class="trip-row" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#details-{{ trip.id }}">
+                                            <td class="ps-4">
+                                                <div class="fw-bold fs-5 text-primary">{{ trip.schedule.departure_time|date:"H:i" }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold">{{ trip.schedule.route.name }}</div>
+                                                <div class="small text-muted">{{ trip.schedule.route.total_distance }} km</div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border">{{ trip.bus.license_plate }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info text-dark rounded-pill">{{ trip.tickets.count }} rezervări</span>
+                                            </td>
+                                            <td class="pe-4 text-end">
+                                                <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
+                                                    <i class="bi bi-people-fill me-1"></i> Vezi Pasageri
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="collapse-row">
+                                            <td colspan="5" class="p-0 border-0">
+                                                <div class="collapse" id="details-{{ trip.id }}">
+                                                    <div class="p-4 bg-light border-top">
+                                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 class="fw-bold mb-0 text-uppercase small text-muted">Lista Pasageri - Cursa #{{ trip.id }}</h6>
+                                                            <a href="{% url 'ticket_scanner' %}?trip_id={{ trip.id }}" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm">
+                                                                <i class="bi bi-qr-code-scan me-2"></i> SCANEAZĂ BILETE
+                                                            </a>
+                                                        </div>
+                                                        <div class="row g-3">
+                                                            {% for ticket in trip.tickets.all %}
+                                                                <div class="col-md-6 col-lg-4">
+                                                                    <div class="p-3 bg-white rounded-3 shadow-sm border-start border-4 {% if ticket.is_boarded %}border-success{% else %}border-warning{% endif %}">
+                                                                        <div class="d-flex justify-content-between align-items-center">
+                                                                            <div>
+                                                                                <div class="fw-bold text-dark">{{ ticket.passenger_name }}</div>
+                                                                                <div class="small text-muted">{{ ticket.start_station.name }} → {{ ticket.end_station.name }}</div>
+                                                                            </div>
+                                                                            {% if ticket.is_boarded %}
+                                                                                <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                                                                            {% else %}
+                                                                                <i class="bi bi-clock-history text-warning fs-4"></i>
+                                                                            {% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% empty %}
+                                                                <div class="col-12">
+                                                                    <p class="text-muted italic mb-0">Niciun pasager înscris momentan.</p>
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TODAY'S TRIPS - PERFORMED -->
+            <div class="card border-0 shadow-sm mb-5 opacity-75" style="border-radius: 25px;">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0 text-muted small text-uppercase"><i class="bi bi-check-all me-2"></i>Curse efectuate azi</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 table-sm">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 py-2">Ora</th>
+                                    <th class="py-2">Rută</th>
+                                    <th class="py-2">Pasageri</th>
+                                    <th class="pe-4 py-2 text-end">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trip in assigned_trips %}
+                                    {% if trip.date == today and trip.schedule.departure_time < now.time %}
+                                        <tr class="bg-light bg-opacity-50">
+                                            <td class="ps-4">
+                                                <div class="fw-bold text-muted">{{ trip.schedule.departure_time|date:"H:i" }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="text-muted">{{ trip.schedule.route.name }}</div>
+                                            </td>
+                                            <td>
+                                                <span class="small text-muted">{{ trip.tickets.count }} pasageri</span>
+                                            </td>
+                                            <td class="pe-4 text-end">
+                                                <span class="badge bg-secondary rounded-pill">Efectuată</span>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FUTURE TRIPS -->
             <div class="card border-0 shadow-sm" style="border-radius: 25px;">
                 <div class="card-header bg-white py-4 border-0">
-                    <h4 class="fw-bold mb-0"><i class="bi bi-calendar-event me-2 text-primary"></i>Cursele Mele</h4>
+                    <h4 class="fw-bold mb-0 text-muted"><i class="bi bi-calendar-event me-2"></i>Curse Viitoare</h4>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="ps-4 py-3">Cursă</th>
-                                    <th class="py-3">Plecare</th>
+                                    <th class="ps-4 py-3">Dată</th>
+                                    <th class="py-3">Ora</th>
                                     <th class="py-3">Rută</th>
-                                    <th class="py-3">Autobuz</th>
-                                    <th class="py-3">Bilete</th>
+                                    <th class="py-3">Pasageri</th>
                                     <th class="pe-4 py-3 text-end">Acțiuni</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for trip in assigned_trips %}
-                                    <tr>
-                                        <td class="ps-4 fw-bold">#{{ trip.id }}</td>
-                                        <td>
-                                            <div class="fw-bold">{{ trip.schedule.departure_time|date:"H:i" }}</div>
-                                            <div class="small text-muted">{{ trip.date|date:"d.m.Y" }}</div>
-                                        </td>
-                                        <td>
-                                            <div class="fw-bold">{{ trip.schedule.route.name }}</div>
-                                            <div class="small text-muted">{{ trip.schedule.route.total_distance }} km</div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-light text-dark border">{{ trip.bus.license_plate }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info text-dark rounded-pill">{{ trip.tickets.count }} vândute</span>
-                                        </td>
-                                        <td class="pe-4 text-end">
-                                            <a href="{% url 'route_detail' trip.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
-                                                Detalii
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="6" class="text-center py-5">
-                                            <i class="bi bi-info-circle text-muted mb-3" style="font-size: 2rem;"></i>
-                                            <p class="text-muted">Nu aveți nicio cursă alocată momentan.</p>
-                                        </td>
-                                    </tr>
+                                    {% if trip.date > today %}
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold text-dark">{{ trip.date|date:"d.m.Y" }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-primary">{{ trip.schedule.departure_time|date:"H:i" }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold">{{ trip.schedule.route.name }}</div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark border">{{ trip.tickets.count }} bilete</span>
+                                            </td>
+                                            <td class="pe-4 text-end">
+                                                <a href="{% url 'route_detail' trip.id %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">
+                                                    Detalii
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -107,4 +226,9 @@
         </div>
     </div>
 </div>
+
+<style>
+    .trip-row:hover { background-color: #f8f9fa; }
+    .collapse-row td { border-top: none !important; }
+</style>
 {% endblock %}
