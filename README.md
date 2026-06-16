@@ -4,6 +4,12 @@ AutoTrans este o aplicație web Django pentru administrarea unei flote de autobu
 
 Proiect realizat pentru disciplina **Metode de Dezvoltare Software**.
 
+## Documentație proces
+
+Pentru detalii despre backlog, Sprint Backlog, arhitectură, diagrame UML, Git workflow, teste, bug reports, pull request-uri, design patterns și folosirea instrumentelor AI, vezi:
+
+[PROCES_DE_DEZVOLTARE.md](PROCES_DE_DEZVOLTARE.md)
+
 ## Funcționalități principale
 
 - Căutare rute directe și rute cu transfer
