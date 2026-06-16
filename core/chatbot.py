@@ -8,7 +8,7 @@ from decimal import Decimal
 import requests
 from django.utils import timezone
 
-from .models import RouteSchedule, RouteStation, Station, Trip
+from .models import Route, RouteSchedule, RouteStation, Station, Trip
 
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/chat")
