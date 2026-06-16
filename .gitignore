@@ -1,9 +1,23 @@
 venv/
 env/
 .venv/
+.idea/
 
 .env
 
 *.sqlite3
+*.bak
 __pycache__/
 *.pyc 
+
+# Local/demo artifacts kept out of the submitted repository
+add_more_routes.py
+populeaza.py
+test_gemini.py
+DOCUMENTATIE*.md
+DOCUMENTATIE*.html
+documentatie_*.html
+PREZENTARE_*.html
+prezentare_*.txt
+New Document text.txt
+Sistem de management pentru o flotă de autobuze.pdf
