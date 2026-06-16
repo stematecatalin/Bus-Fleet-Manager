@@ -123,12 +123,26 @@ def populate():
                 driver=sofer,
                 status='scheduled'
             )
-            if current_date == today:
-                Ticket.objects.create(
-                    client=sofer_u, trip=trip, passenger_name="Ion Popescu", 
-                    price=Decimal('42.50'), start_station=s.route.stations.first().station,
-                    end_station=s.route.stations.last().station
-                )
+
+    print("--- Pasul 5: Creăm bilete de test ---")
+    client1 = create_verified_user(
+        email="client@test.ro",
+        password="password123",
+        first_name="Ion",
+        last_name="Client",
+        phone_number="0700000000"
+    )
+
+    for trip in Trip.objects.filter(date=today).select_related('schedule__route'):
+        Ticket.objects.create(
+            client=client1,
+            trip=trip,
+            passenger_name="Ion Popescu",
+            price=Decimal('42.50'),
+            start_station=trip.schedule.route.stations.first().station,
+            end_station=trip.schedule.route.stations.last().station
+        )
+
     print("--- POPULARE REUȘITĂ (CONTURI VERIFICATE)! ---")
 
 if __name__ == '__main__':
