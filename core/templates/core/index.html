@@ -13,46 +13,119 @@
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <!-- Hero Section -->
-<div class="hero-section p-4 p-md-5 mb-5 text-white rounded-4 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, #419140 0%, #2e7d32 100%);">
-    <!-- Autobuz Decorativ -->
-    <div class="position-absolute d-none d-lg-block" style="right: 50px; top: 50%; transform: translateY(-50%) rotate(-5deg); opacity: 1; z-index: 1;">
-        <div class="position-relative">
-            <i class="bi bi-bus-front-fill" style="font-size: 360px; color: #ffffff; opacity:100% ;position: absolute; left: 0; top: 0; z-index: 0;"></i>
-            <i class="bi bi-bus-front" style="font-size: 360px; color: #ffc107;opacity:100% ; position: relative; z-index: 1;"></i>
-        </div>
+<section class="home-hero mb-4">
+    <div class="home-hero-glow home-hero-glow-one"></div>
+    <div class="home-hero-glow home-hero-glow-two"></div>
+
+    <div class="home-hero-bus d-none d-lg-flex" aria-hidden="true">
+        <div class="home-hero-bus-ring"></div>
+        <i class="bi bi-bus-front-fill"></i>
     </div>
-    
-    <div class="position-relative py-3 text-center ms-md-2" style="z-index: 2; max-width: 800px;">
-        <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Călătorește cu <span style="font-weight: 900;">AutoTrans</span></h1>
-        <p class="lead mb-4 mx-auto opacity-90 fs-5" style="max-width: 700px; font-weight: 400; text-shadow: 1px 1px 2px rgba(0,0,0,0.15);">Descoperă o rețea de transport modernă, eficientă și mereu la timp. Găsește-ți ruta, rezervă-ți locul și bucură-te de confortul călătoriei.</p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="/rute/" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-bold text-success shadow-sm fs-5 transition-all">
-                <i class="bi bi-search me-2"></i>Caută Rute
+
+    <div class="home-hero-content">
+        <h1>Călătorește mai ușor cu <span>AutoTrans</span></h1>
+        <p>Găsește ruta potrivită, compară orele și rezervă biletul direct online. Asistentul nostru te ajută inclusiv cu trasee care necesită transfer.</p>
+
+        <div class="home-hero-actions">
+            <a href="/rute/" class="home-hero-primary-btn">
+                <i class="bi bi-search"></i> Caută o rută
+            </a>
+            <a href="#map" class="home-hero-secondary-btn">
+                <i class="bi bi-map"></i> Explorează rețeaua
             </a>
         </div>
-    </div>
-</div>
 
-<!-- Map Section -->
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
-    <div class="card-header bg-white border-0 pt-5 pb-2 text-center">
-        <h3 class="fw-bold text-dark mb-2">Descoperă Rețeaua Noastră</h3>
-        <p class="text-muted">Explorează traseele active direct pe hartă.</p>
+        <div class="home-hero-benefits">
+            <span><i class="bi bi-check-circle-fill"></i> Rezervare rapidă</span>
+            <span><i class="bi bi-check-circle-fill"></i> Bilet digital cu QR</span>
+            <span><i class="bi bi-check-circle-fill"></i> Rute cu transfer</span>
+        </div>
+
     </div>
-    <div class="card-body p-4 pt-2">
-        <div id="map" class="shadow-sm border border-2 border-light" 
-             style="height: 550px; width: 100%; border-radius: 15px;"></div>
+</section>
+
+<!-- Network map -->
+<section class="home-map-section mb-5">
+    <div class="home-map-panel">
+        <div class="home-map-header">
+            <div>
+                <h2>Explorează traseele</h2>
+                <p>Vezi stațiile conectate și selectează o rută din legendă.</p>
+            </div>
+            <div class="home-map-header-actions">
+                <div class="home-map-stats">
+                    <span><strong id="routeCount">0</strong> trasee</span>
+                    <span><strong id="stationCount">0</strong> stații</span>
+                </div>
+                <a href="/rute/" class="home-map-search-link">
+                    Caută bilete <i class="bi bi-arrow-up-right"></i>
+                </a>
+            </div>
+        </div>
+        <div class="home-map-layout">
+            <aside class="home-route-sidebar">
+                <div class="home-route-sidebar-header">
+                    <span>Rute disponibile</span>
+                    <small>Apasă pentru focalizare</small>
+                </div>
+                <div class="home-route-legend" id="routeLegend"></div>
+            </aside>
+            <div class="home-map-canvas">
+                <div id="map"></div>
+                <div class="home-map-hint"><i class="bi bi-cursor-fill"></i> Selectează o rută pentru detalii</div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
 <script>
-    var map = L.map('map').setView([44.436, 25.5], 8); 
+    var map = L.map('map', { zoomControl: false }).setView([44.436, 25.5], 8);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; CartoDB'
     }).addTo(map);
 
     var ruteData = {{ rute_json|safe }};
+    var routePalette = ['#56c271', '#39a9a4', '#f0b44d', '#6da7e5', '#a887d8', '#ee8f6b'];
+    var routeLayers = {};
+    var stationKeys = new Set();
+
+    ruteData.forEach(function(ruta, index) {
+        ruta.culoare = routePalette[index % routePalette.length];
+    });
+
+    document.getElementById('routeCount').textContent = ruteData.length;
+    ruteData.forEach(function(ruta) {
+        ruta.statii.forEach(function(statie) { stationKeys.add(statie.nume); });
+    });
+    document.getElementById('stationCount').textContent = stationKeys.size;
+
+    var legend = document.getElementById('routeLegend');
+    ruteData.forEach(function(ruta) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'home-route-chip';
+        button.innerHTML = `
+            <span class="home-route-chip-color" style="--route-color:${ruta.culoare}"></span>
+            <span class="home-route-chip-copy">
+                <strong>${ruta.nume}</strong>
+                <small>${ruta.statii.length} stații</small>
+            </span>
+            <i class="bi bi-chevron-right"></i>
+        `;
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.home-route-chip').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            button.classList.add('active');
+            if (routeLayers[ruta.id]) {
+                map.fitBounds(routeLayers[ruta.id].getBounds(), { padding: [45, 45] });
+                routeLayers[ruta.id].openPopup();
+            }
+        });
+        legend.appendChild(button);
+    });
 
     if (ruteData && ruteData.length > 0) {
         var allBounds = L.latLngBounds();
@@ -64,6 +137,13 @@
             }
 
             var ruta = ruteData[index];
+            var firstStation = ruta.statii[0];
+            var lastStation = ruta.statii[ruta.statii.length - 1];
+            var today = new Date();
+            var localDate = today.getFullYear() + '-' +
+                String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                String(today.getDate()).padStart(2, '0');
+            var routeSearchUrl = `/rute/?departure=${firstStation.id}&arrival=${lastStation.id}&date=${localDate}`;
             var puncteDeTrecere = ruta.statii.map(function(s) {
                 var latlng = L.latLng(s.lat, s.lng);
                 allBounds.extend(latlng);
@@ -72,7 +152,20 @@
 
             // 1. Markere - le punem imediat
             puncteDeTrecere.forEach(function(p, i) {
-                L.marker(p).addTo(map).bindPopup("<b>" + ruta.statii[i].nume + "</b><br>Ruta: " + ruta.nume);
+                var stationKey = `${ruta.statii[i].lat}-${ruta.statii[i].lng}`;
+                if (map._autotransStations && map._autotransStations.has(stationKey)) return;
+                if (!map._autotransStations) map._autotransStations = new Set();
+                map._autotransStations.add(stationKey);
+                var stationIcon = L.divIcon({
+                    className: 'autotrans-station-marker',
+                    html: '<span><i class="bi bi-geo-alt-fill"></i></span>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 26],
+                    popupAnchor: [0, -22]
+                });
+                L.marker(p, { icon: stationIcon }).addTo(map).bindPopup(
+                    `<div class="autotrans-station-popup"><small>STAȚIE AUTOTRANS</small><strong>${ruta.statii[i].nume}</strong></div>`
+                );
             });
 
             // 2. Linie dreaptă temporară
@@ -121,6 +214,7 @@
                     lineJoin: 'round',
                     pane: 'overlayPane'
                 }).addTo(map);
+                routeLayers[ruta.id] = realRouteLine;
 
                 // Buffer-ul de click (invizibil, mult mai lat: 30px)
                 var clickBuffer = L.polyline(coordinates, {
@@ -151,12 +245,11 @@
                 });
 
                 var popupContent = `
-                    <div style="min-width: 180px; text-align: center; padding: 10px; font-family: sans-serif;">
-                        <h6 style="margin: 0 0 8px 0; font-weight: 800; color: ${ruta.culoare}; font-size: 15px;">${ruta.nume}</h6>
-                        <div style="font-size: 12px; color: #555; margin-bottom: 12px;">Traseu activ AutoTrans</div>
-                        <a href="/rute/" style="background-color: ${ruta.culoare}; color: white; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 12px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                            VEZI DETALII
-                        </a>
+                    <div class="autotrans-route-popup">
+                        <span style="--route-color:${ruta.culoare}">Traseu activ</span>
+                        <h6>${ruta.nume}</h6>
+                        <p>${ruta.statii.length} stații în această rută</p>
+                        <a href="${routeSearchUrl}">Vezi cursele <i class="bi bi-arrow-right"></i></a>
                     </div>
                 `;
 
@@ -170,7 +263,7 @@
                 tempLine.bindPopup(`
                     <div class="p-2 text-center">
                         <h6 class="fw-bold mb-1">${ruta.nume}</h6>
-                        <a href="/rute/" class="btn btn-sm btn-success rounded-pill px-3">Vezi rute</a>
+                        <a href="${routeSearchUrl}" class="btn btn-sm btn-success rounded-pill px-3">Vezi cursele</a>
                     </div>
                 `);
                 setTimeout(() => { incarcaRute(index + 1); }, 100);

@@ -1,0 +1,206 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">
+<style>
+    #content {
+        max-width: min(1580px, calc(100vw - 32px));
+        margin: 0 auto;
+    }
+    #content-main {
+        float: none !important;
+        width: 100% !important;
+        max-width: min(1580px, calc(100vw - 32px));
+        margin: 0 auto !important;
+    }
+    .autotrans-admin-home { display: grid; gap: 22px; }
+    .admin-home-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 22px;
+        align-items: center;
+        padding: 28px;
+        color: #fff;
+        border-radius: 22px;
+        background:
+            radial-gradient(circle at 88% 10%, rgba(244, 198, 99, .27), transparent 24rem),
+            linear-gradient(135deg, #0f3d31, #176047);
+        box-shadow: 0 20px 48px rgba(15, 61, 49, .18);
+    }
+    .admin-home-kicker {
+        display: inline-flex;
+        margin-bottom: 10px;
+        padding: 6px 10px;
+        color: #f8cf7c;
+        border-radius: 999px;
+        background: rgba(255,255,255,.11);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .admin-home-hero h1 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(28px, 4vw, 46px);
+        line-height: 1;
+        letter-spacing: -.045em;
+    }
+    .admin-home-hero p {
+        max-width: 880px;
+        margin: 12px 0 0;
+        color: rgba(255,255,255,.78);
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    .admin-home-actions {
+        display: grid;
+        gap: 10px;
+        min-width: 210px;
+    }
+    .admin-home-action {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 14px;
+        color: #0f3d31 !important;
+        border-radius: 13px;
+        background: #fff;
+        font-weight: 850;
+        text-decoration: none;
+    }
+    .admin-home-action.secondary {
+        color: #fff !important;
+        border: 1px solid rgba(255,255,255,.28);
+        background: rgba(255,255,255,.1);
+    }
+    .admin-home-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+    .admin-home-card {
+        text-align: center;
+        padding: 18px;
+        border: 1px solid #d8e8e1;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 12px 30px rgba(15,61,49,.06);
+    }
+    .admin-home-card h2 {
+        margin: 0 0 10px;
+        color: #17372f;
+        font-size: 18px;
+        letter-spacing: -.02em;
+    }
+    .admin-home-card p {
+        min-height: 42px;
+        margin: 0 0 14px;
+        color: #60766e;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+    .admin-home-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    .admin-home-links a {
+        padding: 7px 9px;
+        color: #176047 !important;
+        border-radius: 999px;
+        background: #e8f4ef;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+    }
+    .admin-home-section-title {
+        margin: 4px 0 -10px;
+        color: #17372f;
+        font-size: 18px;
+        font-weight: 850;
+    }
+    #content-main .app-core,
+    #content-main .app-auth {
+        border-radius: 16px;
+    }
+    @media (max-width: 1100px) {
+        .admin-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+        .admin-home-hero { grid-template-columns: 1fr; padding: 22px; }
+        .admin-home-actions { min-width: 0; }
+        .admin-home-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div id="content-main" class="autotrans-admin-home">
+    <section class="admin-home-hero">
+        <div>
+            <span class="admin-home-kicker">Panou administrare</span>
+            <h1>Management AutoTrans</h1>
+            <p>
+                Controlează datele operaționale ale platformei: curse, rute, autobuze, șoferi,
+                bilete și jurnalul deciziilor AI. Pentru optimizare operațională, folosește
+                agentul de flotă dedicat.
+            </p>
+        </div>
+        <div class="admin-home-actions">
+            <a class="admin-home-action" href="{% url 'admin:fleet-optimizer' %}">Agent AI flotă <span>→</span></a>
+            <a class="admin-home-action secondary" href="{% url 'admin:core_trip_changelist' %}">Vezi cursele <span>→</span></a>
+        </div>
+    </section>
+
+    <section class="admin-home-grid" aria-label="Zone principale">
+        <article class="admin-home-card">
+            <h2>Operațional</h2>
+            <p>Resursele folosite zilnic în programarea curselor.</p>
+            <div class="admin-home-links">
+                <a href="{% url 'admin:core_trip_changelist' %}">Curse</a>
+                <a href="{% url 'admin:core_bus_changelist' %}">Autobuze</a>
+                <a href="{% url 'admin:core_employee_changelist' %}">Angajați</a>
+            </div>
+        </article>
+        <article class="admin-home-card">
+            <h2>Rute</h2>
+            <p>Stații, trasee, ordine pe rută și plecări săptămânale.</p>
+            <div class="admin-home-links">
+                <a href="{% url 'admin:core_route_changelist' %}">Rute</a>
+                <a href="{% url 'admin:core_station_changelist' %}">Stații</a>
+                <a href="{% url 'admin:core_route_changelist' %}">Configurator orare</a>
+            </div>
+        </article>
+        <article class="admin-home-card">
+            <h2>Comercial</h2>
+            <p>Bilete, rezervări și date despre pasageri.</p>
+            <div class="admin-home-links">
+                <a href="{% url 'admin:core_ticket_changelist' %}">Bilete</a>
+                <a href="{% url 'admin:core_user_changelist' %}">Utilizatori</a>
+            </div>
+        </article>
+        <article class="admin-home-card">
+            <h2>AI</h2>
+            <p>Optimizare flotă și audit pentru planurile aplicate sau respinse.</p>
+            <div class="admin-home-links">
+                <a href="{% url 'admin:fleet-optimizer' %}">Agent flotă</a>
+                <a href="{% url 'admin:core_aiactionlog_changelist' %}">Jurnal AI</a>
+            </div>
+        </article>
+    </section>
+
+    <h2 class="admin-home-section-title">Toate modelele</h2>
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
