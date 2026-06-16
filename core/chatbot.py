@@ -17,6 +17,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5")
 SUPPORTED_INTENTS = {
     "greeting",
     "search_route",
+    "station_routes",
     "reservation_help",
     "ticket_help",
     "contact_help",
@@ -59,7 +60,7 @@ def call_intent_agent(message_text):
 You are the intent classifier for AutoTrans, a Romanian bus booking website.
 Return ONLY one JSON object. Do not answer the user directly.
 
-Allowed intents: greeting, search_route, reservation_help, ticket_help,
+Allowed intents: greeting, search_route, station_routes, reservation_help, ticket_help,
 contact_help, capabilities, pricing_help, payment_help, boarding_help,
 luggage_help, cancellation_help, delay_help, account_help, passenger_help,
 accessibility_help, station_help, personal_trips, complaint_help, unknown.
@@ -68,11 +69,10 @@ JSON schema:
 {{"intent":"unknown","departure":null,"arrival":null,"date":null,"time":null}}
 
 Rules:
-- Use search_route only when the user wants a bus route or schedule.
+- Use search_route only when the user wants a bus route or schedule between TWO cities.
+- Use station_routes when the user asks what buses/routes leave from a SINGLE city (e.g., "ce curse am din Bucuresti").
 - Use personal_trips for questions about the user's own booking or next trip.
 - Use pricing_help for ticket cost, fare or price questions.
-- Use boarding_help for QR validation, boarding time or boarding procedure.
-- Use unknown only when none of the specific intents applies.
 - date must be YYYY-MM-DD or null.
 - time must be HH:MM or null. For "acum", use the current local time.
 - Today is {today.isoformat()}. Resolve Romanian words such as azi and maine.
@@ -130,7 +130,7 @@ def fallback_intent(message_text):
         intent = "passenger_help"
     elif any(word in normalized for word in ("dizabil", "accesibil", "scaun rulant")):
         intent = "accessibility_help"
-    elif any(word in normalized for word in ("statie", "autogara", "de unde pleaca")):
+    elif any(word in normalized for word in ("statie", "autogara", "de unde pleaca", "ce curse am din", "curse din", "plecari din")):
         intent = "station_help"
     elif any(word in normalized for word in ("reclam", "sesizare", "nemultumit")):
         intent = "complaint_help"
@@ -161,6 +161,8 @@ def fallback_intent(message_text):
     )
     if len(matches) >= 2 and route_question:
         intent = "search_route"
+    elif len(matches) == 1 and intent in ("search_route", "station_help", "unknown"):
+        intent = "station_routes"
 
     search_date = timezone.localdate()
     if "maine" in normalized:
@@ -282,67 +284,111 @@ def _legs_between(departure, arrival, search_date, earliest_at=None):
     return sorted(legs, key=lambda leg: leg["departure_at"])
 
 
-def find_valid_journeys(departure_name, arrival_name, search_date, requested_time=None):
+def find_valid_journeys(departure_name, arrival_name, search_date, requested_time=None, ignore_now=False):
     departure = _find_station(departure_name)
-    arrival = _find_station(arrival_name)
-    if not departure or not arrival:
+    if not departure:
         return []
 
     now_local = timezone.localtime()
     earliest_at = timezone.make_aware(
         datetime.combine(search_date, requested_time or time.min)
     )
-    if search_date == now_local.date():
+    if search_date == now_local.date() and not ignore_now:
         earliest_at = max(earliest_at, now_local)
 
-    journeys = [
-        {"legs": [leg], "departure_at": leg["departure_at"], "arrival_at": leg["arrival_at"]}
-        for leg in _legs_between(departure, arrival, search_date, earliest_at)
-    ]
 
-    transfer_stations = Station.objects.filter(
-        routestation__route__stations__station=departure
-    ).exclude(id__in=(departure.id, arrival.id)).distinct()
-    for transfer in transfer_stations:
-        first_legs = _legs_between(departure, transfer, search_date, earliest_at)
-        for first_leg in first_legs:
-            connection_at = first_leg["arrival_at"] + timedelta(minutes=15)
-            for second_leg in _legs_between(transfer, arrival, search_date, connection_at):
-                journeys.append({
-                    "legs": [first_leg, second_leg],
-                    "departure_at": first_leg["departure_at"],
-                    "arrival_at": second_leg["arrival_at"],
-                })
+    # Dacă avem și destinație, căutăm rute directe și cu transfer
+    if arrival_name:
+        arrival = _find_station(arrival_name)
+        if not arrival:
+            return []
 
-    journeys.sort(key=lambda journey: (journey["arrival_at"], len(journey["legs"])))
-    return journeys[:3]
+        journeys = [
+            {"legs": [leg], "departure_at": leg["departure_at"], "arrival_at": leg["arrival_at"]}
+            for leg in _legs_between(departure, arrival, search_date, earliest_at)
+        ]
+
+        transfer_stations = Station.objects.filter(
+            routestation__route__stations__station=departure
+        ).exclude(id__in=(departure.id, arrival.id)).distinct()
+        for transfer in transfer_stations:
+            first_legs = _legs_between(departure, transfer, search_date, earliest_at)
+            for first_leg in first_legs:
+                connection_at = first_leg["arrival_at"] + timedelta(minutes=15)
+                for second_leg in _legs_between(transfer, arrival, search_date, connection_at):
+                    journeys.append({
+                        "legs": [first_leg, second_leg],
+                        "departure_at": first_leg["departure_at"],
+                        "arrival_at": second_leg["arrival_at"],
+                    })
+
+        journeys.sort(key=lambda journey: (journey["arrival_at"], len(journey["legs"])))
+        return journeys[:5]
+    else:
+        # Doar plecare - returnăm toate rutele care pleacă din această stație către destinația lor finală
+        journeys = []
+        routes_from_station = Route.objects.filter(stations__station=departure).distinct()
+        for route in routes_from_station:
+            last_stop = route.stations.all().order_by("-order").first()
+            if last_stop and last_stop.station_id != departure.id:
+                schedules = RouteSchedule.objects.filter(route=route, day_of_week=search_date.weekday())
+                for sched in schedules:
+                    stops = list(route.stations.all().order_by("order"))
+                    dep_stop = next(s for s in stops if s.station_id == departure.id)
+                    leg = _build_leg(sched, dep_stop, last_stop, search_date)
+                    if leg["departure_at"] >= earliest_at:
+                        journeys.append({
+                            "legs": [leg],
+                            "departure_at": leg["departure_at"],
+                            "arrival_at": leg["arrival_at"]
+                        })
+        journeys.sort(key=lambda j: j["departure_at"])
+        return journeys[:5]
 
 
 def build_route_reply(journeys, departure, arrival, search_date, requested_time=None):
-    if not departure or not arrival:
+    if not departure:
         return (
-            "Spune-mi stația de plecare și destinația. De exemplu: "
-            "**Vreau mâine din Alexandria în București**."
+            "Spune-mi stația de plecare. De exemplu: "
+            "**Ce curse am din București?**"
         )
+    
     time_note = f" după ora **{requested_time.strftime('%H:%M')}**" if requested_time else ""
+    date_str = search_date.strftime('%d.%m.%Y')
+    
     if not journeys:
-        return (
-            f"Nu am găsit curse disponibile din **{departure}** în **{arrival}** "
-            f"pentru **{search_date.strftime('%d.%m.%Y')}**{time_note}, nici cu un transfer. "
-            "Poți încerca o altă oră sau dată."
-        )
+        if arrival:
+            return (
+                f"Nu am găsit curse disponibile din **{departure}** în **{arrival}** "
+                f"pentru **{date_str}**{time_note}. Poți încerca o altă oră sau dată."
+            )
+        else:
+            return (
+                f"Nu am găsit nicio cursă care să plece din **{departure}** "
+                f"pentru **{date_str}**{time_note}."
+            )
 
-    reply = f"Am găsit {len(journeys)} " + ("variantă" if len(journeys) == 1 else "variante") + ":"
+    variant_word = "variantă" if len(journeys) == 1 else "variante"
+    if arrival:
+        reply = f"Am găsit {len(journeys)} {variant_word} pentru ruta **{departure}** → **{arrival}**:"
+    else:
+        reply = f"Am găsit {len(journeys)} {variant_word} care pleacă din **{departure}** pe **{date_str}**:"
+
     for index, journey in enumerate(journeys, start=1):
         legs = journey["legs"]
         duration = journey["arrival_at"] - journey["departure_at"]
         hours, remainder = divmod(int(duration.total_seconds()), 3600)
         minutes = remainder // 60
-        transfer_text = "Direct" if len(legs) == 1 else f"Transfer în {legs[0]['arr_name']}"
+        
+        if arrival:
+            transfer_text = "Direct" if len(legs) == 1 else f"Transfer în {legs[0]['arr_name']}"
+        else:
+            transfer_text = f"Către {legs[-1]['arr_name']}"
+            
         total_price = sum((leg["price"] for leg in legs), Decimal("0"))
         reply += (
             f"\n\n**{index}. {transfer_text}** ({hours}h {minutes:02d}m) · "
-            f"**{total_price:.2f} RON** · **{search_date.strftime('%d.%m.%Y')}**"
+            f"**{total_price:.2f} RON** · **{date_str}**"
         )
         for leg_index, leg in enumerate(legs, start=1):
             label = "Cursa" if len(legs) == 1 else f"Segmentul {leg_index}"
@@ -398,19 +444,61 @@ def _is_price_only_question(message_text):
 
 
 def _build_price_reply(journeys, departure, arrival, search_date):
+    if not departure or not arrival:
+        return "Pentru a afla prețul, te rog să-mi spui atât punctul de plecare, cât și destinația."
+
     if not journeys:
+        # Dacă nu am găsit călătorii pentru data curentă, încercăm să găsim prețul generic pe bază de distanță dacă stațiile există
+        dep_obj = _find_station(departure)
+        arr_obj = _find_station(arrival)
+        if dep_obj and arr_obj:
+            # Încercăm să găsim o rută care le conține direct
+            rs_dep = RouteStation.objects.filter(station=dep_obj).first()
+            rs_arr = RouteStation.objects.filter(station=arr_obj).first()
+            if rs_dep and rs_arr and rs_dep.route_id == rs_arr.route_id and rs_arr.order > rs_dep.order:
+                dist = abs(rs_arr.distance_from_start - rs_dep.distance_from_start)
+                price = Decimal(str(dist)) * Decimal("0.5")
+                return (
+                    f"Prețul standard pentru cursa directă **{dep_obj.name}** → **{arr_obj.name}** "
+                    f"este de aproximativ **{price:.2f} RON**. Tariful este calculat la **0,50 RON/km**."
+                )
+            
+            # Încercăm să găsim un punct de transfer (căutare simplă pe 2 segmente)
+            transfer_station = Station.objects.filter(
+                routestation__route__stations__station=dep_obj
+            ).filter(
+                routestation__route__stations__station=arr_obj
+            ).exclude(id__in=(dep_obj.id, arr_obj.id)).distinct().first()
+            
+            if transfer_station:
+                # Calculăm distanța via transfer
+                rs1_dep = RouteStation.objects.filter(station=dep_obj, route__stations__station=transfer_station).first()
+                rs1_trans = RouteStation.objects.filter(station=transfer_station, route=rs1_dep.route).first()
+                
+                rs2_trans = RouteStation.objects.filter(station=transfer_station, route__stations__station=arr_obj).first()
+                rs2_arr = RouteStation.objects.filter(station=arr_obj, route=rs2_trans.route).first()
+                
+                if rs1_dep and rs1_trans and rs2_trans and rs2_arr:
+                    dist1 = abs(rs1_trans.distance_from_start - rs1_dep.distance_from_start)
+                    dist2 = abs(rs2_arr.distance_from_start - rs2_trans.distance_from_start)
+                    total_price = (Decimal(str(dist1)) + Decimal(str(dist2))) * Decimal("0.5")
+                    return (
+                        f"Prețul estimat pentru ruta **{dep_obj.name}** → **{arr_obj.name}** (cu transfer în **{transfer_station.name}**) "
+                        f"este de aproximativ **{total_price:.2f} RON**. Tariful se compune din cele două segmente calculate la **0,50 RON/km**."
+                    )
+        
         return (
-            f"Nu am găsit o cursă disponibilă din **{departure}** în **{arrival}** "
-            f"pentru **{search_date.strftime('%d.%m.%Y')}**."
+            f"Nu am găsit informații despre preț pentru ruta **{departure}** → **{arrival}**. "
+            "Asigură-te că stațiile sunt corecte."
         )
 
-    direct_journeys = [journey for journey in journeys if len(journey["legs"]) == 1]
-    relevant_journeys = direct_journeys or journeys
     prices = sorted({
         sum((leg["price"] for leg in journey["legs"]), Decimal("0"))
-        for journey in relevant_journeys
+        for journey in journeys
     })
-    route_type = "cursa directă" if direct_journeys else "varianta cu transfer"
+    
+    has_transfer = any(len(j["legs"]) > 1 for j in journeys)
+    route_type = "cursa" if not has_transfer else "varianta (inclusiv cele cu transfer)"
 
     if len(prices) == 1:
         return (
@@ -420,8 +508,8 @@ def _build_price_reply(journeys, departure, arrival, search_date):
 
     formatted_prices = ", ".join(f"**{price:.2f} RON**" for price in prices)
     return (
-        f"Pentru traseul din **{departure}** în **{arrival}**, tarifele disponibile sunt "
-        f"{formatted_prices} per pasager, în funcție de variantă."
+        f"Pentru traseul din **{departure}** în **{arrival}**, am găsit {len(prices)} tarife diferite: "
+        f"{formatted_prices} per pasager, în funcție de cursa și varianta aleasă."
     )
 
 
@@ -459,18 +547,25 @@ def _personal_trips_reply(user):
 def build_assistant_response(message_text, user=None):
     fallback = fallback_intent(message_text)
     extraction = call_intent_agent(message_text) or fallback
-    if (
-        fallback.get("intent") == "search_route"
-        and fallback.get("departure")
-        and fallback.get("arrival")
-    ):
-        extraction["intent"] = "search_route"
-    if extraction.get("intent") == "unknown" and fallback.get("intent") != "search_route":
+    
+    # Logică pentru a detecta dacă e o întrebare despre stație (doar plecare)
+    if not extraction.get("arrival") and extraction.get("departure"):
+        if extraction.get("intent") in ("search_route", "unknown"):
+            extraction["intent"] = "station_routes"
+
+    # Aliniere cu fallback dacă Ollama e nesigur
+    if extraction.get("intent") == "unknown" and fallback.get("intent") != "unknown":
         extraction["intent"] = fallback["intent"]
+    
     for field in ("departure", "arrival", "date", "time"):
         if not extraction.get(field) and fallback.get(field):
             extraction[field] = fallback[field]
+            
     intent = extraction.get("intent", "unknown")
+    departure_name = extraction.get("departure")
+    arrival_name = extraction.get("arrival")
+    search_date = resolve_search_date(extraction.get("date"))
+    requested_time = resolve_search_time(extraction.get("time"))
 
     static_replies = {
         "greeting": "Bună! Sunt asistentul AutoTrans. Te pot ajuta să găsești o cursă, să rezervi sau să descarci un bilet.",
@@ -478,7 +573,7 @@ def build_assistant_response(message_text, user=None):
         "ticket_help": "Biletele tale sunt în pagina [Rezervările mele](/rezervarile-mele/), de unde poți descărca PDF-ul cu codul QR.",
         "contact_help": "Ne poți contacta la **+40 712 345 678**, la **contact@autotrans.ro** sau prin pagina [Contact](/contact/).",
         "capabilities": "Pot căuta rute directe sau cu transfer, verifica orare, explica prețul, plata, rezervarea, îmbarcarea, biletele QR și rezervările tale. Pentru politici speciale te trimit către echipa AutoTrans.",
-        "pricing_help": "Prețul este calculat în funcție de distanța parcursă: **0,50 RON/km pentru fiecare pasager**. Prețul exact apare înainte de confirmarea plății.",
+        "pricing_help": "Prețul este calculat în funcție de distanța parcursă: **0,50 RON/km pentru fiecare pasager**. Spune-mi plecarea și destinația pentru a-ți calcula costul exact.",
         "payment_help": "Plata cu cardul este simulată în acest proiect. După alegerea cursei completezi pasagerii și datele cardului, iar sistemul generează biletele. Nu introduce date bancare reale în versiunea demonstrativă.",
         "boarding_help": "La îmbarcare prezintă biletul PDF și codul QR. Șoferul îl scanează și validează biletul o singură dată. Recomand să fii în stație cu aproximativ **10-15 minute înainte**.",
         "luggage_help": "Aplicația nu definește încă o politică oficială pentru bagaje. Pentru dimensiuni, costuri suplimentare sau obiecte speciale, verifică direct cu echipa la [Contact](/contact/) înainte de plecare.",
@@ -491,34 +586,26 @@ def build_assistant_response(message_text, user=None):
         "complaint_help": "Pentru o sesizare, folosește formularul [Contact](/contact/) și menționează data, ruta și numărul biletului. Echipa va putea identifica mai ușor cursa.",
         "unknown": "Întrebarea ta pare să țină de o situație pentru care aplicația nu are informații oficiale. Nu vreau să inventez un răspuns: poți cere confirmarea echipei la [Contact](/contact/), **+40 712 345 678** sau **contact@autotrans.ro**.",
     }
+
     if intent == "personal_trips":
         return {"text": _personal_trips_reply(user), "journeys": []}
+    
+    # Pre-calculate journeys for route or price queries
+    is_price_q = _is_price_only_question(message_text) or (intent == "pricing_help" and departure_name and arrival_name)
+    journeys = find_valid_journeys(departure_name, arrival_name, search_date, requested_time, ignore_now=is_price_q)
+
+    # Priority for price inquiries
+    if is_price_q:
+        return {
+            "text": _build_price_reply(journeys, departure_name, arrival_name, search_date),
+            "journeys": _serialize_journeys(journeys) if journeys else [],
+        }
+
     if intent in static_replies:
         return {"text": static_replies[intent], "journeys": []}
-
-    search_date = resolve_search_date(extraction.get("date"))
-    requested_time = resolve_search_time(extraction.get("time"))
-    journeys = find_valid_journeys(
-        extraction.get("departure"), extraction.get("arrival"), search_date, requested_time
-    )
-    if _is_price_only_question(message_text):
-        return {
-            "text": _build_price_reply(
-                journeys,
-                extraction.get("departure"),
-                extraction.get("arrival"),
-                search_date,
-            ),
-            "journeys": [],
-        }
+        
     return {
-        "text": build_route_reply(
-            journeys,
-            extraction.get("departure"),
-            extraction.get("arrival"),
-            search_date,
-            requested_time,
-        ),
+        "text": build_route_reply(journeys, departure_name, arrival_name, search_date, requested_time),
         "journeys": _serialize_journeys(journeys),
     }
 
