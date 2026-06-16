@@ -157,7 +157,7 @@ def fallback_intent(message_text):
 
     route_question = any(
         phrase in normalized
-        for phrase in ("cursa", "ruta", "ajung", "plec", "orar", "cat costa", "pret", "tarif")
+        for phrase in ("autobuz", "cursa", "ruta", "ajung", "plec", "orar", "cat costa", "pret", "tarif")
     )
     if len(matches) >= 2 and route_question:
         intent = "search_route"
@@ -181,7 +181,13 @@ def fallback_intent(message_text):
         hour = int(time_match.group(1))
         if hour <= 23:
             requested_time = f"{hour:02d}:{int(time_match.group(2)):02d}"
-    elif "acum" in normalized:
+    else:
+        hour_match = re.search(r"\b(?:ora|la ora|dupa ora|după ora)\s+(\d{1,2})\b", normalized)
+        if hour_match:
+            hour = int(hour_match.group(1))
+            if hour <= 23:
+                requested_time = f"{hour:02d}:00"
+    if not requested_time and "acum" in normalized:
         requested_time = timezone.localtime().strftime("%H:%M")
 
     return {

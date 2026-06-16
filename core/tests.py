@@ -7,6 +7,7 @@ from datetime import date, time, timedelta
 
 from django.utils import timezone
 
+from .chatbot import fallback_intent
 from .models import User, Bus, Station, Route, Employee, RouteSchedule, RouteStation, Ticket, Trip
 
 class ModelTests(TestCase):
@@ -226,6 +227,50 @@ class ChatbotTests(TestCase):
         self.assertEqual(journeys[0]["transfer_count"], 1)
         self.assertEqual(len(journeys[0]["legs"]), 2)
         self.assertEqual(journeys[0]["total_price"], "159.00")
+
+    @patch("core.chatbot.call_intent_agent", return_value=None)
+    def test_chatbot_fallback_understands_hour_without_minutes(self, intent_agent):
+        departure = Station.objects.create(
+            name="București (Autogara Rahova)", latitude=44.43, longitude=26.10
+        )
+        arrival = Station.objects.create(
+            name="Alexandria (Centru)", latitude=43.97, longitude=25.33
+        )
+        route = Route.objects.create(
+            name="București - Alexandria", total_distance=92, duration=timedelta(hours=2)
+        )
+        RouteStation.objects.create(
+            route=route, station=departure, order=1,
+            time_from_start=timedelta(), distance_from_start=0,
+        )
+        RouteStation.objects.create(
+            route=route, station=arrival, order=2,
+            time_from_start=timedelta(hours=2), distance_from_start=92,
+        )
+        travel_date = timezone.localdate() + timedelta(days=1)
+        for departure_time in (time(7, 0), time(13, 30), time(18, 30)):
+            RouteSchedule.objects.create(
+                route=route,
+                day_of_week=travel_date.weekday(),
+                departure_time=departure_time,
+            )
+
+        response = self.client.post(
+            reverse("send_chat_message"),
+            data=json.dumps({
+                "message": "mâine la ora 15 am autobuz bucuresti-alexandria?"
+            }),
+            content_type="application/json",
+        )
+
+        fallback = fallback_intent("mâine la ora 15 am autobuz bucuresti-alexandria?")
+        reply = response.json()["support_message"]["text"]
+        journeys = response.json()["support_message"]["journeys"]
+        self.assertEqual(fallback["time"], "15:00")
+        self.assertIn("18:30", reply)
+        self.assertNotIn("07:00", reply)
+        self.assertNotIn("13:30", reply)
+        self.assertEqual(len(journeys), 1)
 
     @patch("core.chatbot.call_intent_agent", return_value=None)
     def test_chatbot_answers_traveller_faq_without_ai(self, intent_agent):
