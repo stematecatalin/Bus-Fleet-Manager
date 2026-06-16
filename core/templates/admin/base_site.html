@@ -31,6 +31,9 @@
         --default-button-hover-bg: #222 !important;
         --hairline-color: #d8e8e1 !important;
         --border-color: #d8e8e1 !important;
+
+        /* Lărgim panoul central prin variabilele Django */
+        --main-column-max-width: 1600px !important;
     }
 
     :root[data-theme="dark"] {
@@ -51,6 +54,8 @@
         --button-hover-bg: #2fa978 !important;
         --hairline-color: #31483f !important;
         --border-color: #31483f !important;
+        
+        --main-column-max-width: 1600px !important;
     }
 
     /* Forțăm elementele care nu folosesc variabilele corect */
@@ -122,6 +127,20 @@
 
     #content {
         padding-top: 24px;
+        max-width: 1600px !important;
+        width: 95% !important;
+        margin: 0 auto;
+    }
+
+    /* Django 4.x+ folosește .container sau #container pentru lățimea maximă */
+    #container, .container {
+        max-width: 1600px !important;
+        width: 95% !important;
+        margin: 0 auto !important;
+    }
+
+    #main {
+        max-width: 100% !important;
     }
 
     .module,
