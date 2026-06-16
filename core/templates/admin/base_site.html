@@ -5,8 +5,8 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-    /* Suprascriem variabilele globale de temă ale Django 4/5 */
-    :root, :root[data-theme="light"], :root[data-theme="dark"] {
+    /* Suprascriem doar accentele, nu fundalul/textul temei Django. */
+    :root, :root[data-theme="light"] {
         --primary: #2E7D32 !important;
         --primary-fg: #fff !important;
         --secondary: #1B5E20 !important;
@@ -29,10 +29,28 @@
         
         --default-button-bg: #444 !important;
         --default-button-hover-bg: #222 !important;
-        --body-bg: #f4f8f6 !important;
-        --body-fg: #17372f !important;
         --hairline-color: #d8e8e1 !important;
         --border-color: #d8e8e1 !important;
+    }
+
+    :root[data-theme="dark"] {
+        --primary: #2f9d6f !important;
+        --primary-fg: #fff !important;
+        --secondary: #1f7557 !important;
+        --accent: #6fd4a8 !important;
+        --header-bg: #10261f !important;
+        --header-color: #fff !important;
+        --header-link-color: #fff !important;
+        --breadcrumbs-bg: #14372d !important;
+        --breadcrumbs-fg: #e9f5ef !important;
+        --breadcrumbs-link-fg: #fff !important;
+        --link-color: #74d7aa !important;
+        --link-hover-color: #a7efcc !important;
+        --button-bg: #23815f !important;
+        --button-fg: #fff !important;
+        --button-hover-bg: #2fa978 !important;
+        --hairline-color: #31483f !important;
+        --border-color: #31483f !important;
     }
 
     /* Forțăm elementele care nu folosesc variabilele corect */
@@ -123,6 +141,17 @@
 
     table thead th {
         background: #f0f7f4 !important;
+    }
+
+    :root[data-theme="dark"] table thead th {
+        background: #20352e !important;
+    }
+
+    :root[data-theme="dark"] .module,
+    :root[data-theme="dark"] #changelist,
+    :root[data-theme="dark"] .inline-group {
+        border-color: #31483f !important;
+        box-shadow: none;
     }
 </style>
 {% endblock %}
