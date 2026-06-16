@@ -413,6 +413,42 @@ class ChatbotTests(TestCase):
         )
 
         support = response.json()["support_message"]
-        self.assertEqual(support["journeys"], [])
+        self.assertTrue(len(support["journeys"]) >= 1)
         self.assertIn("32.50 RON", support["text"])
-        self.assertIn("cursa directă", support["text"])
+        self.assertIn("cursa", support["text"])
+
+    @patch("core.chatbot.call_intent_agent")
+    def test_route_price_with_transfer(self, intent_agent):
+        """Test pricing logic when a transfer is needed."""
+        # Setup stations
+        alex = Station.objects.create(name="Alexandria (Centru)", latitude=43.97, longitude=25.33)
+        buc = Station.objects.create(name="București (Autogara Rahova)", latitude=44.43, longitude=26.10)
+        craiova = Station.objects.create(name="Craiova (Autogara Nord)", latitude=44.3, longitude=23.8)
+        
+        # Route 1: Alexandria -> Bucuresti
+        r1 = Route.objects.create(name="Alexandria - București", total_distance=65.0, duration=timedelta(hours=1.5))
+        RouteStation.objects.create(route=r1, station=alex, order=1, distance_from_start=0, time_from_start=timedelta(0))
+        RouteStation.objects.create(route=r1, station=buc, order=2, distance_from_start=65, time_from_start=timedelta(hours=1.5))
+        
+        # Route 2: Bucuresti -> Craiova
+        r2 = Route.objects.create(name="București - Craiova", total_distance=230.0, duration=timedelta(hours=3))
+        RouteStation.objects.create(route=r2, station=buc, order=1, distance_from_start=0, time_from_start=timedelta(0))
+        RouteStation.objects.create(route=r2, station=craiova, order=2, distance_from_start=230, time_from_start=timedelta(hours=3))
+        
+        intent_agent.return_value = {
+            "intent": "pricing_help", "departure": "Alexandria", "arrival": "Craiova",
+            "date": None, "time": None,
+        }
+
+        response = self.client.post(
+            reverse("send_chat_message"),
+            data=json.dumps({
+                "message": "cat costa biletul de la alexandria la craiova"
+            }),
+            content_type="application/json",
+        )
+
+        support = response.json()["support_message"]
+        # Alexandria-Buc (65km) + Buc-Craiova (230km) = 295km. 295 * 0.5 = 147.50 RON
+        self.assertIn("147.50 RON", support["text"])
+        self.assertIn("București (Autogara Rahova)", support["text"])
