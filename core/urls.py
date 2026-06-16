@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
@@ -17,4 +18,9 @@ urlpatterns = [
     path("api/arrival-counts/", views.get_arrival_counts, name="get_arrival_counts"),
     path("api/send-chat-message/", views.send_chat_message, name="send_chat_message"),
     path("api/get-chat-history/", views.get_chat_history, name="get_chat_history"),
+    path(
+        "management/agent-flota/",
+        RedirectView.as_view(pattern_name="admin:fleet-optimizer", permanent=False),
+        name="fleet_optimizer_redirect",
+    ),
     ]

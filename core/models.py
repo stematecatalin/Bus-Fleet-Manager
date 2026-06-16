@@ -330,3 +330,42 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{'Suport' if self.is_from_support else self.user} - {self.created_at}"
+
+
+class AIActionLog(models.Model):
+    ACTION_CHOICES = [
+        ('merge_trips', 'Combinare curse'),
+        ('bus_reallocation', 'Realocare autobuz'),
+        ('driver_reallocation', 'Realocare șoferi'),
+    ]
+    STATUS_CHOICES = [
+        ('applied', 'Aplicat'),
+        ('rejected', 'Respins'),
+    ]
+
+    action_type = models.CharField("Tip acțiune", max_length=32, choices=ACTION_CHOICES)
+    status = models.CharField("Status", max_length=16, choices=STATUS_CHOICES)
+    source = models.CharField("Sursă plan", max_length=64, blank=True)
+    model_name = models.CharField("Model AI", max_length=80, blank=True)
+    summary = models.CharField("Rezumat", max_length=255)
+    rationale = models.TextField("Motivație", blank=True)
+    plan_payload = models.JSONField("Plan", default=dict, blank=True)
+    related_trip_ids = models.JSONField("Curse afectate", default=list, blank=True)
+    error_message = models.TextField("Eroare", blank=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ai_action_logs",
+        verbose_name="Aplicat de",
+    )
+    created_at = models.DateTimeField("Data", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Jurnal acțiune AI"
+        verbose_name_plural = "Jurnal acțiuni AI"
+
+    def __str__(self):
+        return f"{self.get_action_type_display()} - {self.get_status_display()} - {self.created_at:%d.%m.%Y %H:%M}"

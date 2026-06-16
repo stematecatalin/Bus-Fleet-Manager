@@ -1,0 +1,337 @@
+.fleet-admin {
+    --fleet-green: #176b55;
+    --fleet-green-dark: #123f34;
+    --fleet-border: #dce8e3;
+    --fleet-muted: #687d76;
+    --fleet-page: #f4f7f5;
+    --fleet-surface: #ffffff;
+    --fleet-surface-soft: #f7faf8;
+    --fleet-surface-raised: #ffffff;
+    --fleet-text: #17372f;
+    --fleet-text-soft: #60766e;
+    color: var(--fleet-text);
+    font-size: 15px;
+}
+
+#content > h1 { display: none; }
+
+.fleet-admin * { box-sizing: border-box; }
+
+.fleet-admin-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 18px;
+    padding: 30px;
+    color: #fff;
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 88% 15%, rgba(248, 189, 74, .24), transparent 28%),
+        linear-gradient(135deg, #113b31, #17634f);
+    box-shadow: 0 18px 45px rgba(18, 60, 50, .15);
+}
+
+.fleet-admin-kicker {
+    color: #f8cf7c;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .06em;
+}
+
+.fleet-admin-hero h1 {
+    margin: 6px 0 0;
+    color: #fff;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 850;
+    line-height: 1.1;
+}
+
+.fleet-admin-hero p {
+    max-width: 760px;
+    margin: 9px 0 0;
+    color: #d7e9e3;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.fleet-admin-model {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 170px;
+    padding: 12px 15px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, .09);
+}
+
+.fleet-admin-model > span {
+    width: 11px;
+    height: 11px;
+    border: 3px solid rgba(112, 224, 177, .22);
+    border-radius: 50%;
+    background: #70e0b1;
+    box-sizing: content-box;
+}
+
+.fleet-admin-model div { display: flex; flex-direction: column; }
+.fleet-admin-model small { color: #bdd8cf; font-size: 12px; }
+.fleet-admin-model strong { color: #fff; font-size: 15px; }
+
+.fleet-admin-overview {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.fleet-admin-overview article {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid var(--fleet-border);
+    border-radius: 14px;
+    background: var(--fleet-surface);
+    box-shadow: 0 7px 22px rgba(21, 75, 61, .055);
+}
+
+.fleet-admin-overview article.is-accent { border-color: #ead8ad; background: #fffaf0; }
+.fleet-metric-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; color: var(--fleet-green); border-radius: 11px; background: #e3f2ed; font-size: 14px; font-weight: 900; }
+.is-accent .fleet-metric-icon { color: #795515; background: #f7e5bd; }
+.fleet-admin-overview article > div { display: flex; min-width: 0; flex-direction: column; }
+.fleet-admin-overview strong { color: var(--fleet-text); font-size: 22px; line-height: 1; }
+.fleet-admin-overview small { overflow: hidden; margin-top: 4px; color: var(--fleet-text-soft); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+
+.fleet-admin-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(310px, .68fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.fleet-admin-main { display: grid; gap: 18px; }
+.fleet-admin-panel { padding: 22px; border: 1px solid var(--fleet-border); border-radius: 17px; background: var(--fleet-surface); box-shadow: 0 10px 30px rgba(21, 75, 61, .07); }
+
+.fleet-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 17px;
+}
+
+.fleet-panel-heading > div:first-child { display: flex; flex-direction: column; }
+.fleet-panel-heading > div:first-child > span { color: #71877f; font-size: 12px; font-weight: 850; letter-spacing: .06em; }
+.fleet-panel-heading h2 { margin: 3px 0 0; color: var(--fleet-text); font-size: 22px; font-weight: 850; }
+.fleet-panel-heading p { margin: 5px 0 0; color: var(--fleet-text-soft); font-size: 14px; }
+
+.fleet-admin-counts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.fleet-admin-counts span { padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.fleet-admin-counts .critical { color: #913c3c; background: #fde8e8; }
+.fleet-admin-counts .warning { color: #7b5419; background: #fff0cf; }
+.fleet-admin-counts .info { color: #27607e; background: #e4f1f7; }
+
+.fleet-issue-groups { display: grid; gap: 10px; }
+.fleet-issue-group { overflow: hidden; border: 1px solid var(--fleet-border); border-radius: 13px; background: var(--fleet-surface-soft); }
+.fleet-issue-group summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; list-style: none; }
+.fleet-issue-group summary::-webkit-details-marker { display: none; }
+.fleet-issue-group summary:hover { background: rgba(23, 107, 85, .035); }
+.fleet-issue-group summary > span:nth-child(2) { display: flex; min-width: 0; flex-direction: column; }
+.fleet-issue-group summary strong { color: #294a40; font-size: 15px; }
+.fleet-issue-group summary small { margin-top: 2px; color: #71877f; font-size: 13px; }
+.fleet-issue-group summary b { min-width: 32px; padding: 5px 8px; border-radius: 999px; font-size: 12px; text-align: center; }
+
+.fleet-group-symbol { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; font-size: 13px; font-weight: 900; }
+.fleet-issue-group.is-critical .fleet-group-symbol { color: #9b3f3f; background: #fde5e5; }
+.fleet-issue-group.is-critical summary b { color: #913c3c; background: #fde8e8; }
+.fleet-issue-group.is-warning .fleet-group-symbol { color: #805817; background: #ffedc5; }
+.fleet-issue-group.is-warning summary b { color: #7b5419; background: #fff0cf; }
+.fleet-issue-group.is-resource .fleet-group-symbol { color: #76531c; background: #f4e8cf; }
+.fleet-issue-group.is-resource summary b { color: #76531c; background: #f5ead4; }
+.fleet-issue-group.is-info .fleet-group-symbol { color: #276783; background: #e1f0f7; }
+.fleet-issue-group.is-info summary b { color: #27607e; background: #e4f1f7; }
+
+.fleet-group-content { display: grid; gap: 7px; padding: 4px 12px 12px; border-top: 1px solid #e5edea; }
+.fleet-group-scroll { max-height: 430px; overflow-y: auto; }
+.fleet-issue-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 11px 12px; border-radius: 9px; background: var(--fleet-surface-raised); }
+.fleet-issue-row + .fleet-issue-row { border-top: 1px solid #edf2f0; }
+.fleet-issue-title { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.fleet-issue-title strong { color: #294a40; font-size: 14px; }
+.fleet-issue-title span { padding: 3px 7px; color: #6a5540; border-radius: 999px; background: #f1ece3; font-size: 11px; font-weight: 800; }
+.fleet-issue-row p { margin: 4px 0 0; color: #60766e; font-size: 13px; line-height: 1.45; }
+.fleet-issue-row a { padding: 7px 9px; color: var(--fleet-green); border: 1px solid #c9ddd5; border-radius: 8px; font-size: 12px; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.fleet-issue-row a:hover { color: #fff; border-color: var(--fleet-green); background: var(--fleet-green); }
+.fleet-issue-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.fleet-generate-reallocation { padding: 7px 10px; color: #fff; border: 0; border-radius: 8px; background: var(--fleet-green); font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.fleet-generate-reallocation:hover { background: #115743; }
+.fleet-generate-reallocation:disabled { opacity: .65; cursor: wait; }
+.fleet-generate-driver-plan { padding: 7px 10px; color: #fff; border: 0; border-radius: 8px; background: #466178; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.fleet-generate-driver-plan:hover { background: #344c61; }
+.fleet-generate-driver-plan:disabled { opacity: .65; cursor: wait; }
+.fleet-group-empty { margin: 0; padding: 12px; color: #71877f; font-size: 13px; }
+
+.fleet-opportunity-panel { border-color: #e6d7b5; }
+.fleet-opportunity-total { display: grid; place-items: center; width: 45px; height: 45px; color: #775317; border-radius: 13px; background: #f5e5c1; font-size: 19px; }
+.fleet-opportunity-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+.fleet-opportunity-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px 12px; padding: 14px; border: 1px solid #eadfca; border-radius: 12px; background: #fffcf5; }
+.fleet-opportunity-route { display: flex; min-width: 0; flex-direction: column; }
+.fleet-opportunity-route span { color: #8a7857; font-size: 11px; font-weight: 750; }
+.fleet-opportunity-route strong { overflow: hidden; color: #5d4821; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.fleet-opportunity-times { display: flex; align-items: center; gap: 5px; color: #765318; }
+.fleet-opportunity-times strong { padding: 4px 6px; border-radius: 6px; background: #f7e7c6; font-size: 13px; }
+.fleet-opportunity-times span { font-weight: 900; }
+.fleet-opportunity-result { display: flex; flex-direction: column; }
+.fleet-opportunity-result strong { color: #294a40; font-size: 13px; }
+.fleet-opportunity-result span { color: #71877f; font-size: 12px; }
+.fleet-opportunity-item p { grid-column: 1 / -1; margin: 2px 0 0; color: #71644d; font-size: 12px; line-height: 1.45; }
+.fleet-generate-plan { grid-column: 1 / -1; justify-self: start; padding: 8px 11px; color: #fff; border: 0; border-radius: 8px; background: #8a651f; font-size: 12px; font-weight: 800; cursor: pointer; }.fleet-generate-plan:hover { background: #6f5017; }.fleet-generate-plan:disabled { opacity: .65; cursor: wait; }
+.fleet-plan-panel { border-color: #b9d9ce; }.fleet-close-plan { padding: 7px 10px; color: var(--fleet-text-soft); border: 1px solid var(--fleet-border); border-radius: 8px; background: var(--fleet-surface-soft); cursor: pointer; }.fleet-plan-content { display: grid; gap: 14px; }.fleet-plan-choice { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 12px; }.fleet-plan-choice article { display: flex; flex-direction: column; padding: 14px; border: 1px solid #b9d9ce; border-radius: 11px; background: #edf7f3; }.fleet-plan-choice article.is-cancel { border-color: #e3c7c7; background: #fff4f4; }.fleet-plan-choice span,.fleet-plan-bus span,.fleet-plan-rationale span { color: #71877f; font-size: 11px; font-weight: 800; text-transform: uppercase; }.fleet-plan-choice strong { margin-top: 3px; color: #294a40; font-size: 17px; }.fleet-plan-choice small { margin-top: 3px; color: #60766e; }.fleet-plan-arrow { color: var(--fleet-green); font-size: 24px; font-weight: 900; }.fleet-plan-bus,.fleet-plan-rationale { padding: 13px 14px; border-radius: 10px; background: var(--fleet-surface-soft); }.fleet-plan-bus { display: flex; align-items: center; justify-content: space-between; gap: 12px; }.fleet-plan-bus strong { color: var(--fleet-text); }.fleet-plan-rationale p { margin: 5px 0; color: var(--fleet-text); font-size: 14px; line-height: 1.5; }.fleet-plan-rationale small { color: var(--fleet-text-soft); }.fleet-plan-warning { padding: 12px 14px; color: #76531c; border-radius: 10px; background: #fff1d3; font-size: 13px; }.fleet-apply-plan { min-height: 44px; color: #fff; border: 0; border-radius: 9px; background: var(--fleet-green); font-size: 14px; font-weight: 850; cursor: pointer; }.fleet-apply-plan:hover { background: #115743; }.fleet-plan-status { padding: 0; font-size: 13px; }.fleet-plan-status.is-success,.fleet-plan-status.is-error { padding: 11px 13px; border-radius: 9px; }.fleet-plan-status.is-success { color: #176047; background: #e6f5ef; }.fleet-plan-status.is-error { color: #913c3c; background: #fde8e8; }
+.fleet-driver-assignment-list { display: grid; gap: 9px; max-height: 390px; overflow-y: auto; padding-right: 4px; }
+.fleet-driver-assignment { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, auto); align-items: center; gap: 16px; padding: 12px 14px; border: 1px solid var(--fleet-border); border-radius: 10px; background: var(--fleet-surface-soft); }
+.fleet-driver-assignment.is-changed { border-color: #b9d9ce; background: #edf7f3; }
+.fleet-driver-assignment > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.fleet-driver-assignment span,.fleet-driver-assignment small { color: var(--fleet-text-soft); font-size: 12px; }
+.fleet-driver-assignment strong { color: var(--fleet-text); }
+.fleet-driver-move { display: grid; grid-template-columns: minmax(90px, 1fr) auto minmax(90px, 1fr); align-items: center; gap: 9px; text-align: center; }
+.fleet-driver-move b { color: var(--fleet-green); font-size: 18px; }
+
+.fleet-admin-chat { position: sticky; top: 18px; }
+.fleet-agent-identity { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.fleet-agent-identity > span { display: grid; place-items: center; width: 42px; height: 42px; color: #5e420f; border-radius: 12px; background: #f4c663; font-size: 13px; font-weight: 900; }
+.fleet-agent-identity div { display: flex; flex-direction: column; }
+.fleet-agent-identity strong { color: #294a40; font-size: 15px; }
+.fleet-agent-identity small { color: #71877f; font-size: 12px; }
+.fleet-admin-chat h2 { margin: 0; color: var(--body-fg, #17372f); font-size: 22px; }
+.fleet-chat-intro { margin: 6px 0 15px; color: #687d76; font-size: 13px; line-height: 1.5; }
+.fleet-admin-suggestions { display: grid; gap: 7px; margin-bottom: 12px; }
+.fleet-admin-suggestions button { padding: 10px 11px; color: #31554a; border: 1px solid #d5e5df; border-radius: 9px; background: #f7faf9; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer; }
+.fleet-admin-suggestions button:hover { border-color: #75aa98; background: #edf7f3; }
+.fleet-admin-answer { min-height: 130px; margin-bottom: 13px; padding: 14px; color: #36564c; border-radius: 10px; background: #f2f7f5; font-size: 13px; line-height: 1.55; white-space: pre-line; }
+.fleet-admin-answer[data-model]::before { content: attr(data-model); display: block; margin-bottom: 7px; color: var(--fleet-green); font-size: 11px; font-weight: 850; text-transform: uppercase; }
+#fleet-admin-form { display: grid; gap: 7px; }
+#fleet-admin-form label { color: #294940; font-size: 13px; font-weight: 800; }
+#fleet-admin-form textarea { width: 100%; padding: 11px; color: var(--fleet-text); border: 1px solid #cbded7; border-radius: 9px; background: var(--fleet-surface-raised); font-size: 13px; resize: vertical; }
+#fleet-admin-form textarea:focus { outline: 0; border-color: #27856b; box-shadow: 0 0 0 3px rgba(39, 133, 107, .12); }
+#fleet-admin-submit { min-height: 44px; color: #fff; border: 0; border-radius: 9px; background: var(--fleet-green); font-size: 14px; font-weight: 800; cursor: pointer; }
+#fleet-admin-submit:hover { background: #115743; }
+#fleet-admin-submit:disabled { opacity: .65; cursor: wait; }
+.fleet-chat-note { display: block; margin-top: 10px; color: #748981; font-size: 11px; line-height: 1.4; }
+.fleet-admin-clear { display: flex; flex-direction: column; padding: 16px; color: #176047; border-radius: 10px; background: #e9f6f1; }
+
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] .fleet-admin {
+        --fleet-border: #344a43;
+        --fleet-muted: #9aafa7;
+        --fleet-page: #111916;
+        --fleet-surface: #192420;
+        --fleet-surface-soft: #1d2b26;
+        --fleet-surface-raised: #22312c;
+        --fleet-text: #e6f0ec;
+        --fleet-text-soft: #a5b8b1;
+    }
+}
+
+:root[data-theme="dark"] .fleet-admin {
+    --fleet-border: #344a43;
+    --fleet-muted: #9aafa7;
+    --fleet-page: #111916;
+    --fleet-surface: #192420;
+    --fleet-surface-soft: #1d2b26;
+    --fleet-surface-raised: #22312c;
+    --fleet-text: #e6f0ec;
+    --fleet-text-soft: #a5b8b1;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] .fleet-admin-overview article.is-accent,
+    :root[data-theme="auto"] .fleet-opportunity-item {
+        border-color: #665536;
+        background: #2b281f;
+    }
+
+    :root[data-theme="auto"] .fleet-issue-group summary:hover,
+    :root[data-theme="auto"] .fleet-admin-suggestions button:hover {
+        background: #263a33;
+    }
+
+    :root[data-theme="auto"] .fleet-admin-suggestions button,
+    :root[data-theme="auto"] .fleet-admin-answer {
+        color: #c9d8d3;
+        border-color: #385149;
+        background: #20302a;
+    }
+
+    :root[data-theme="auto"] .fleet-issue-row + .fleet-issue-row {
+        border-color: #30453e;
+    }
+
+    :root[data-theme="auto"] .fleet-issue-title strong,
+    :root[data-theme="auto"] .fleet-agent-identity strong,
+    :root[data-theme="auto"] #fleet-admin-form label,
+    :root[data-theme="auto"] .fleet-opportunity-result strong {
+        color: #dce9e4;
+    }
+
+    :root[data-theme="auto"] .fleet-issue-row p,
+    :root[data-theme="auto"] .fleet-chat-intro,
+    :root[data-theme="auto"] .fleet-opportunity-result span {
+        color: #a5b8b1;
+    }
+}
+
+:root[data-theme="dark"] .fleet-admin-overview article.is-accent,
+:root[data-theme="dark"] .fleet-opportunity-item {
+    border-color: #665536;
+    background: #2b281f;
+}
+
+:root[data-theme="dark"] .fleet-issue-group summary:hover,
+:root[data-theme="dark"] .fleet-admin-suggestions button:hover {
+    background: #263a33;
+}
+
+:root[data-theme="dark"] .fleet-admin-suggestions button,
+:root[data-theme="dark"] .fleet-admin-answer {
+    color: #c9d8d3;
+    border-color: #385149;
+    background: #20302a;
+}
+
+:root[data-theme="dark"] .fleet-issue-row + .fleet-issue-row { border-color: #30453e; }
+:root[data-theme="dark"] .fleet-issue-title strong,
+:root[data-theme="dark"] .fleet-agent-identity strong,
+:root[data-theme="dark"] #fleet-admin-form label,
+:root[data-theme="dark"] .fleet-opportunity-result strong { color: #dce9e4; }
+:root[data-theme="dark"] .fleet-issue-row p,
+:root[data-theme="dark"] .fleet-chat-intro,
+:root[data-theme="dark"] .fleet-opportunity-result span { color: #a5b8b1; }
+:root[data-theme="dark"] .fleet-plan-choice article { border-color: #3c5b51; background: #20352e; }:root[data-theme="dark"] .fleet-plan-choice article.is-cancel { border-color: #624343; background: #342626; }:root[data-theme="dark"] .fleet-plan-choice strong { color: #e1ece8; }:root[data-theme="dark"] .fleet-plan-choice small { color: #a5b8b1; }:root[data-theme="dark"] .fleet-plan-warning { color: #e5c98f; background: #352f22; }
+:root[data-theme="dark"] .fleet-driver-assignment.is-changed { border-color: #3c5b51; background: #20352e; }
+
+@media (max-width: 1150px) {
+    .fleet-admin-overview { grid-template-columns: repeat(3, 1fr); }
+    .fleet-admin-workspace { grid-template-columns: 1fr; }
+    .fleet-admin-chat { position: static; grid-row: 1; }
+}
+
+@media (max-width: 760px) {
+    .fleet-admin-hero { align-items: flex-start; flex-direction: column; padding: 21px; }
+    .fleet-admin-overview { grid-template-columns: repeat(2, 1fr); }
+    .fleet-panel-heading { align-items: flex-start; flex-direction: column; }
+    .fleet-admin-counts { justify-content: flex-start; }
+    .fleet-opportunity-list { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+    .fleet-admin-overview { grid-template-columns: 1fr; }
+    .fleet-admin-panel { padding: 15px; }
+    .fleet-issue-row { grid-template-columns: 1fr; }
+    .fleet-issue-row a { justify-self: start; }
+    .fleet-issue-actions { justify-content: flex-start; }
+    .fleet-driver-assignment { grid-template-columns: 1fr; }
+    .fleet-issue-group summary { grid-template-columns: auto minmax(0, 1fr); }
+    .fleet-issue-group summary b { grid-column: 2; justify-self: start; }
+}

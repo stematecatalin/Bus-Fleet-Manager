@@ -1,0 +1,26 @@
+<article class="fleet-issue-row">
+    <div>
+        <div class="fleet-issue-title">
+            <strong>{{ issue.title }}</strong>
+            {% if issue.affected_count %}<span>{{ issue.affected_count }} curse</span>{% endif %}
+        </div>
+        <p>{{ issue.message }}</p>
+    </div>
+    <div class="fleet-issue-actions">
+        {% if issue.type == 'missing_bus' or issue.type == 'unavailable_bus' or issue.type == 'bus_conflict' %}
+        <button
+            type="button"
+            class="fleet-generate-reallocation"
+            data-trip-ids="{% if issue.trip_ids %}{{ issue.trip_ids|join:',' }}{% else %}{{ issue.trip_id }}{% endif %}"
+        >Generează plan de realocare</button>
+        {% endif %}
+        {% if issue.type == 'missing_driver' or issue.type == 'unavailable_driver' or issue.type == 'driver_conflict' or issue.type == 'driver_daily_hours' %}
+        <button
+            type="button"
+            class="fleet-generate-driver-plan"
+            data-trip-ids="{% if issue.trip_ids %}{{ issue.trip_ids|join:',' }}{% else %}{{ issue.trip_id }}{% endif %}"
+        >Generează plan pentru șoferi</button>
+        {% endif %}
+        <a href="{% url 'admin:core_trip_change' issue.trip_id %}">Cursa #{{ issue.trip_id }}</a>
+    </div>
+</article>

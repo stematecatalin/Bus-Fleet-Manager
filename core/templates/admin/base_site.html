@@ -29,12 +29,17 @@
         
         --default-button-bg: #444 !important;
         --default-button-hover-bg: #222 !important;
+        --body-bg: #f4f8f6 !important;
+        --body-fg: #17372f !important;
+        --hairline-color: #d8e8e1 !important;
+        --border-color: #d8e8e1 !important;
     }
 
     /* Forțăm elementele care nu folosesc variabilele corect */
     #header {
-        background: var(--primary) !important;
+        background: linear-gradient(135deg, #0d3329, #176047) !important;
         color: #fff !important;
+        box-shadow: 0 12px 32px rgba(15, 61, 49, .18);
     }
 
     .breadcrumbs {
@@ -59,8 +64,65 @@
 
     /* Modulele (barele verzi de deasupra listelor) */
     .module h2, .module caption {
-        background: var(--primary) !important;
+        background: linear-gradient(135deg, #176047, #218166) !important;
         color: #fff !important;
+    }
+
+    #branding {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    #site-name {
+        margin-right: 4px;
+        font-weight: 850;
+        letter-spacing: .02em;
+    }
+
+    .admin-fleet-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 12px;
+        color: #0f3d31 !important;
+        border: 1px solid rgba(255,255,255,.55);
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(4, 28, 20, .16);
+        font-size: 12px;
+        font-weight: 850;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .admin-fleet-link:hover {
+        color: #0b2d24 !important;
+        background: #e9f6f1;
+    }
+
+    #content {
+        padding-top: 24px;
+    }
+
+    .module,
+    #changelist,
+    .inline-group {
+        overflow: hidden;
+        border: 1px solid #d8e8e1 !important;
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(15, 61, 49, .06);
+    }
+
+    #changelist-filter,
+    #toolbar,
+    .paginator {
+        border-color: #d8e8e1 !important;
+    }
+
+    table thead th {
+        background: #f0f7f4 !important;
     }
 </style>
 {% endblock %}
@@ -69,4 +131,8 @@
 <h1 id="site-name">
     <a href="{% url 'admin:index' %}">AUTOTRANS MANAGEMENT</a>
 </h1>
+<a class="admin-fleet-link" href="{% url 'admin:fleet-optimizer' %}">Agent AI flotă</a>
+{% endblock %}
+
+{% block nav-global %}
 {% endblock %}

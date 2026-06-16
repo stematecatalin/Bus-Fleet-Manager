@@ -92,6 +92,11 @@
                               <li><hr class="dropdown-divider"></li>
                               {% if user.is_superuser %}
                                   <li><a class="dropdown-item" href="/admin/"><i class="bi bi-gear-fill"></i><span>Management</span><i class="bi bi-chevron-right menu-arrow"></i></a></li>
+                                  <li><a class="dropdown-item" href="{% url 'admin:fleet-optimizer' %}"><i class="bi bi-stars"></i><span>Agent flotă AI</span><i class="bi bi-chevron-right menu-arrow"></i></a></li>
+                                  <li><hr class="dropdown-divider"></li>
+                              {% endif %}
+                              {% if user.is_staff and not user.is_superuser %}
+                                  <li><a class="dropdown-item" href="{% url 'admin:fleet-optimizer' %}"><i class="bi bi-stars"></i><span>Agent flotă AI</span><i class="bi bi-chevron-right menu-arrow"></i></a></li>
                                   <li><hr class="dropdown-divider"></li>
                               {% endif %}
                               {% if user.employee and user.employee.position == 'driver' %}
@@ -122,6 +127,10 @@
                           <div class="mobile-account-links">
                               {% if user.is_superuser %}
                                   <a href="/admin/"><i class="bi bi-gear-fill"></i>Management</a>
+                                  <a href="{% url 'admin:fleet-optimizer' %}"><i class="bi bi-stars"></i>Agent flotă AI</a>
+                              {% endif %}
+                              {% if user.is_staff and not user.is_superuser %}
+                                  <a href="{% url 'admin:fleet-optimizer' %}"><i class="bi bi-stars"></i>Agent flotă AI</a>
                               {% endif %}
                               {% if user.employee and user.employee.position == 'driver' %}
                                   <a href="{% url 'driver_dashboard' %}"><i class="bi bi-speedometer2"></i>Panou Șofer</a>

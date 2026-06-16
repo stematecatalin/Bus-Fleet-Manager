@@ -1,0 +1,478 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'core/css/fleet_admin.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Management</a> &rsaquo; Agent AI flotă</div>
+{% endblock %}
+
+{% block content %}
+<div class="fleet-admin">
+    <header class="fleet-admin-hero">
+        <div class="fleet-admin-hero-copy">
+            <span class="fleet-admin-kicker">CENTRU DE DECIZIE OPERAȚIONALĂ</span>
+            <h1>Agent pentru optimizarea flotei</h1>
+            <p>Analiză pentru {{ analysis.period.start }} - {{ analysis.period.end }}. Datele sunt calculate de aplicație, iar Mistral explică recomandările.</p>
+        </div>
+        <div class="fleet-admin-model"><span></span><div><small>Agent activ</small><strong>Mistral Nemo</strong></div></div>
+    </header>
+
+    <section class="fleet-admin-overview">
+        <article><span class="fleet-metric-icon">C</span><div><strong>{{ analysis.summary.trips }}</strong><small>curse analizate</small></div></article>
+        <article><span class="fleet-metric-icon">B</span><div><strong>{{ analysis.summary.tickets }}</strong><small>bilete rezervate</small></div></article>
+        <article><span class="fleet-metric-icon">A</span><div><strong>{{ analysis.summary.active_buses }}</strong><small>autobuze active</small></div></article>
+        <article><span class="fleet-metric-icon">Ș</span><div><strong>{{ analysis.summary.active_drivers }}</strong><small>șoferi activi</small></div></article>
+        <article class="is-accent"><span class="fleet-metric-icon">O</span><div><strong>{{ analysis.summary.opportunities }}</strong><small>oportunități</small></div></article>
+    </section>
+
+    <div class="fleet-admin-workspace">
+        <main class="fleet-admin-main">
+            <section class="fleet-admin-panel fleet-admin-priority">
+                <div class="fleet-panel-heading">
+                    <div><span>PRIORITĂȚI</span><h2>Situația operațională</h2><p>Problemele sunt grupate după tip și impact.</p></div>
+                    <div class="fleet-admin-counts">
+                        <span class="critical">{{ analysis.summary.critical }} critice</span>
+                        <span class="warning">{{ analysis.summary.warning }} atenționări</span>
+                        <span class="info">{{ analysis.summary.info }} informări</span>
+                    </div>
+                </div>
+
+                <div class="fleet-issue-groups">
+                    <details class="fleet-issue-group is-critical" open>
+                        <summary>
+                            <span class="fleet-group-symbol">!</span>
+                            <span><strong>Conflicte de alocare</strong><small>Autobuze sau șoferi programați simultan</small></span>
+                            <b>{{ analysis.issue_groups.conflicts|length }}</b>
+                        </summary>
+                        <div class="fleet-group-content">
+                            {% for issue in analysis.issue_groups.conflicts %}
+                                {% include "admin/core/includes/fleet_issue.html" %}
+                            {% empty %}<p class="fleet-group-empty">Niciun conflict detectat.</p>{% endfor %}
+                        </div>
+                    </details>
+
+                    <details class="fleet-issue-group is-warning" open>
+                        <summary>
+                            <span class="fleet-group-symbol">8h</span>
+                            <span><strong>Programul șoferilor</strong><small>Depășirea pragului operațional zilnic</small></span>
+                            <b>{{ analysis.issue_groups.driver_hours|length }}</b>
+                        </summary>
+                        <div class="fleet-group-content">
+                            {% for issue in analysis.issue_groups.driver_hours %}
+                                {% include "admin/core/includes/fleet_issue.html" %}
+                            {% empty %}<p class="fleet-group-empty">Niciun șofer nu depășește pragul analizat.</p>{% endfor %}
+                        </div>
+                    </details>
+
+                    <details class="fleet-issue-group is-resource"{% if analysis.issue_groups.resources %} open{% endif %}>
+                        <summary>
+                            <span class="fleet-group-symbol">R</span>
+                            <span><strong>Resurse indisponibile</strong><small>Curse fără autobuz sau șofer activ</small></span>
+                            <b>{{ analysis.issue_groups.resources|length }}</b>
+                        </summary>
+                        <div class="fleet-group-content">
+                            {% for issue in analysis.issue_groups.resources %}
+                                {% include "admin/core/includes/fleet_issue.html" %}
+                            {% empty %}<p class="fleet-group-empty">Toate cursele au resurse disponibile.</p>{% endfor %}
+                        </div>
+                    </details>
+
+                    <details class="fleet-issue-group is-info">
+                        <summary>
+                            <span class="fleet-group-symbol">%</span>
+                            <span><strong>Grad de ocupare</strong><small>Curse foarte aglomerate sau slab utilizate</small></span>
+                            <b>{{ analysis.issue_groups.occupancy|length }}</b>
+                        </summary>
+                        <div class="fleet-group-content fleet-group-scroll">
+                            {% for issue in analysis.issue_groups.occupancy %}
+                                {% include "admin/core/includes/fleet_issue.html" %}
+                            {% empty %}<p class="fleet-group-empty">Nu există abateri de ocupare.</p>{% endfor %}
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section class="fleet-admin-panel fleet-opportunity-panel">
+                <div class="fleet-panel-heading">
+                    <div><span>EFICIENȚĂ</span><h2>Propuneri de combinare</h2><p>Curse apropiate ca oră, pe aceeași rută, cu suficientă capacitate disponibilă.</p></div>
+                    <strong class="fleet-opportunity-total">{{ analysis.opportunities|length }}</strong>
+                </div>
+                <div class="fleet-opportunity-list">
+                    {% for opportunity in analysis.opportunities %}
+                    <article class="fleet-opportunity-item">
+                        <div class="fleet-opportunity-route">
+                            <span>{{ opportunity.date }}</span>
+                            <strong>{{ opportunity.route }}</strong>
+                        </div>
+                        <div class="fleet-opportunity-times">
+                            <strong>{{ opportunity.departure_times.0 }}</strong><span>+</span><strong>{{ opportunity.departure_times.1 }}</strong>
+                        </div>
+                        <div class="fleet-opportunity-result">
+                            <strong>{{ opportunity.combined_tickets }} pasageri</strong>
+                            <span>{{ opportunity.recommended_bus.license_plate }} · {{ opportunity.recommended_bus.capacity }} locuri</span>
+                        </div>
+                        <p>{{ opportunity.message }}</p>
+                        <button
+                            type="button"
+                            class="fleet-generate-plan"
+                            data-first-trip="{{ opportunity.trip_ids.0 }}"
+                            data-second-trip="{{ opportunity.trip_ids.1 }}"
+                        >Generează plan AI</button>
+                    </article>
+                    {% empty %}<div class="fleet-admin-clear"><strong>Nicio propunere momentan</strong><span>Nu există perechi eligibile în perioada analizată.</span></div>{% endfor %}
+                </div>
+            </section>
+
+            <section class="fleet-admin-panel fleet-plan-panel" id="fleet-plan-panel" hidden>
+                <div class="fleet-panel-heading">
+                    <div><span>PLAN PROPUS</span><h2>Previzualizarea schimbării</h2><p>Verifică efectele înainte de modificarea bazei de date.</p></div>
+                    <button type="button" class="fleet-close-plan" id="fleet-close-plan">Închide</button>
+                </div>
+                <div class="fleet-plan-content">
+                    <div class="fleet-plan-choice">
+                        <article><span>Cursa păstrată</span><strong id="plan-keep-trip"></strong><small id="plan-keep-details"></small></article>
+                        <span class="fleet-plan-arrow">←</span>
+                        <article class="is-cancel"><span>Cursa anulată</span><strong id="plan-cancel-trip"></strong><small id="plan-cancel-details"></small></article>
+                    </div>
+                    <div class="fleet-plan-bus"><span>Autobuz alocat</span><strong id="plan-bus"></strong></div>
+                    <div class="fleet-plan-bus"><span>Șofer alocat</span><strong id="plan-driver"></strong></div>
+                    <div class="fleet-plan-bus"><span>Noua oră de plecare</span><strong id="plan-departure-time"></strong></div>
+                    <div class="fleet-plan-rationale"><span>Recomandarea agentului</span><p id="plan-rationale"></p><small id="plan-model"></small></div>
+                    <div class="fleet-plan-warning"><strong>La confirmare:</strong> biletele sunt mutate pe cursa păstrată, iar cealaltă cursă este marcată ca anulată.</div>
+                    <button type="button" class="fleet-apply-plan" id="fleet-apply-plan">Confirmă și aplică schimbarea</button>
+                    <div class="fleet-plan-status" id="fleet-plan-status"></div>
+                </div>
+            </section>
+
+            <section class="fleet-admin-panel fleet-plan-panel" id="fleet-reallocation-panel" hidden>
+                <div class="fleet-panel-heading">
+                    <div><span>REALOCARE PROPUSĂ</span><h2>Înlocuirea autobuzului</h2><p>Agentul a ales dintre autobuzele active, libere și cu suficientă capacitate.</p></div>
+                    <button type="button" class="fleet-close-plan" id="fleet-close-reallocation">Închide</button>
+                </div>
+                <div class="fleet-plan-content">
+                    <div class="fleet-plan-choice">
+                        <article class="is-cancel"><span>Alocare curentă</span><strong id="reallocation-current-bus"></strong><small id="reallocation-trip"></small></article>
+                        <span class="fleet-plan-arrow">→</span>
+                        <article><span>Autobuz recomandat</span><strong id="reallocation-new-bus"></strong><small id="reallocation-capacity"></small></article>
+                    </div>
+                    <div class="fleet-plan-rationale"><span>Recomandarea agentului</span><p id="reallocation-rationale"></p><small id="reallocation-model"></small></div>
+                    <div class="fleet-plan-warning"><strong>La confirmare:</strong> se modifică doar autobuzul cursei selectate. Disponibilitatea este verificată din nou chiar înainte de salvare.</div>
+                    <button type="button" class="fleet-apply-plan" id="fleet-apply-reallocation">Confirmă și aplică realocarea</button>
+                    <div class="fleet-plan-status" id="fleet-reallocation-status"></div>
+                </div>
+            </section>
+
+            <section class="fleet-admin-panel fleet-plan-panel" id="fleet-driver-plan-panel" hidden>
+                <div class="fleet-panel-heading">
+                    <div><span>DISTRIBUȚIE PROPUSĂ</span><h2>Realocarea șoferilor</h2><p>Plan complet pentru cursele din alertă, fără suprapuneri și cu maximum 8 ore pe zi.</p></div>
+                    <button type="button" class="fleet-close-plan" id="fleet-close-driver-plan">Închide</button>
+                </div>
+                <div class="fleet-plan-content">
+                    <div class="fleet-driver-assignment-list" id="fleet-driver-assignment-list"></div>
+                    <div class="fleet-plan-rationale"><span>Recomandarea agentului</span><p id="driver-plan-rationale"></p><small id="driver-plan-model"></small></div>
+                    <div class="fleet-plan-warning"><strong>La confirmare:</strong> sunt actualizați doar șoferii curselor afișate. Întregul plan este reverificat înainte de salvare.</div>
+                    <button type="button" class="fleet-apply-plan" id="fleet-apply-driver-plan">Confirmă și aplică distribuția</button>
+                    <div class="fleet-plan-status" id="fleet-driver-plan-status"></div>
+                </div>
+            </section>
+        </main>
+
+        <aside class="fleet-admin-panel fleet-admin-chat">
+            <div class="fleet-agent-identity"><span>AI</span><div><strong>Asistent flotă</strong><small>Mistral Nemo · date locale</small></div></div>
+            <h2>Întreabă agentul</h2>
+            <p class="fleet-chat-intro">Primești o explicație bazată exclusiv pe analiza afișată în dashboard.</p>
+            <div class="fleet-admin-suggestions">
+                <button type="button">Care sunt primele trei priorități?</button>
+                <button type="button">Ce șoferi depășesc 8 ore?</button>
+                <button type="button">Ce curse merită combinate?</button>
+            </div>
+            <div class="fleet-admin-answer" id="fleet-admin-answer">Selectează o întrebare rapidă sau descrie situația pe care vrei să o analizezi.</div>
+            <form id="fleet-admin-form">
+                {% csrf_token %}
+                <label for="fleet-admin-question">Întrebarea ta</label>
+                <textarea id="fleet-admin-question" rows="4" placeholder="Ex: Cum reduc conflictele de mâine?" required></textarea>
+                <button type="submit" id="fleet-admin-submit">Analizează cu Mistral</button>
+            </form>
+            <small class="fleet-chat-note">Nicio alocare nu este modificată automat.</small>
+        </aside>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('fleet-admin-form');
+    const question = document.getElementById('fleet-admin-question');
+    const answer = document.getElementById('fleet-admin-answer');
+    const submit = document.getElementById('fleet-admin-submit');
+    const planPanel = document.getElementById('fleet-plan-panel');
+    const applyPlanButton = document.getElementById('fleet-apply-plan');
+    const planStatus = document.getElementById('fleet-plan-status');
+    const reallocationPanel = document.getElementById('fleet-reallocation-panel');
+    const applyReallocationButton = document.getElementById('fleet-apply-reallocation');
+    const reallocationStatus = document.getElementById('fleet-reallocation-status');
+    const driverPlanPanel = document.getElementById('fleet-driver-plan-panel');
+    const applyDriverPlanButton = document.getElementById('fleet-apply-driver-plan');
+    const driverPlanStatus = document.getElementById('fleet-driver-plan-status');
+    let activePlanToken = null;
+    let activeReallocationToken = null;
+    let activeDriverPlanToken = null;
+
+    document.querySelectorAll('.fleet-admin-suggestions button').forEach(button => {
+        button.addEventListener('click', () => {
+            question.value = button.textContent.trim();
+            question.focus();
+        });
+    });
+
+    document.querySelectorAll('.fleet-generate-plan').forEach(button => {
+        button.addEventListener('click', async () => {
+            button.disabled = true;
+            button.textContent = 'Generez planul...';
+            planStatus.textContent = '';
+            try {
+                const response = await fetch('{% url "admin:fleet-optimizer-plan" %}', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+                    body: JSON.stringify({
+                        first_trip_id: button.dataset.firstTrip,
+                        second_trip_id: button.dataset.secondTrip
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Plan indisponibil');
+                const plan = data.plan;
+                activePlanToken = plan.token;
+                document.getElementById('plan-keep-trip').textContent = `Cursa #${plan.keep_trip.id}`;
+                document.getElementById('plan-keep-details').textContent = `${plan.keep_trip.departure_time} · ${plan.keep_trip.tickets} bilete existente`;
+                document.getElementById('plan-cancel-trip').textContent = `Cursa #${plan.cancel_trip.id}`;
+                document.getElementById('plan-cancel-details').textContent = `${plan.cancel_trip.departure_time} · ${plan.cancel_trip.tickets} bilete de mutat`;
+                document.getElementById('plan-bus').textContent = `${plan.recommended_bus.license_plate} · ${plan.recommended_bus.capacity} locuri`;
+                document.getElementById('plan-driver').textContent = plan.recommended_driver.name;
+                document.getElementById('plan-departure-time').textContent = plan.proposed_departure_time;
+                document.getElementById('plan-rationale').textContent = plan.rationale;
+                document.getElementById('plan-model').textContent = `Generat de: ${plan.model}`;
+                planPanel.hidden = false;
+                planPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
+            } catch (error) {
+                window.alert(error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Generează plan AI';
+            }
+        });
+    });
+
+    document.getElementById('fleet-close-plan').addEventListener('click', () => {
+        planPanel.hidden = true;
+        activePlanToken = null;
+    });
+
+    document.querySelectorAll('.fleet-generate-reallocation').forEach(button => {
+        button.addEventListener('click', async () => {
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Caut cel mai bun autobuz...';
+            reallocationStatus.textContent = '';
+            try {
+                const response = await fetch('{% url "admin:fleet-optimizer-reallocation-plan" %}', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+                    body: JSON.stringify({trip_ids: button.dataset.tripIds.split(',')})
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Plan indisponibil');
+                const plan = data.plan;
+                activeReallocationToken = plan.token;
+                document.getElementById('reallocation-current-bus').textContent = plan.current_bus
+                    ? plan.current_bus.license_plate
+                    : 'Fără autobuz';
+                document.getElementById('reallocation-trip').textContent = `Cursa #${plan.trip.id} · ${plan.trip.route} · ${plan.trip.date} ${plan.trip.departure_time}`;
+                document.getElementById('reallocation-new-bus').textContent = plan.recommended_bus.license_plate;
+                document.getElementById('reallocation-capacity').textContent = `${plan.recommended_bus.label} · ${plan.recommended_bus.capacity} locuri · ${plan.trip.tickets} bilete`;
+                document.getElementById('reallocation-rationale').textContent = plan.rationale;
+                document.getElementById('reallocation-model').textContent = `Generat de: ${plan.model}`;
+                reallocationPanel.hidden = false;
+                reallocationPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
+            } catch (error) {
+                window.alert(error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        });
+    });
+
+    document.getElementById('fleet-close-reallocation').addEventListener('click', () => {
+        reallocationPanel.hidden = true;
+        activeReallocationToken = null;
+    });
+
+    applyReallocationButton.addEventListener('click', async () => {
+        if (!activeReallocationToken) return;
+        if (!window.confirm('Confirmi schimbarea autobuzului pentru această cursă?')) return;
+        applyReallocationButton.disabled = true;
+        applyReallocationButton.textContent = 'Aplic realocarea...';
+        try {
+            const response = await fetch('{% url "admin:fleet-optimizer-reallocation-apply" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+                body: JSON.stringify({token: activeReallocationToken})
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.error || 'Realocarea nu a putut fi aplicată');
+            reallocationStatus.textContent = data.message;
+            reallocationStatus.className = 'fleet-plan-status is-success';
+            activeReallocationToken = null;
+            setTimeout(() => window.location.reload(), 1800);
+        } catch (error) {
+            reallocationStatus.textContent = error.message;
+            reallocationStatus.className = 'fleet-plan-status is-error';
+        } finally {
+            applyReallocationButton.disabled = false;
+            applyReallocationButton.textContent = 'Confirmă și aplică realocarea';
+        }
+    });
+
+    document.querySelectorAll('.fleet-generate-driver-plan').forEach(button => {
+        button.addEventListener('click', async () => {
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Construiesc distribuția...';
+            driverPlanStatus.textContent = '';
+            try {
+                const response = await fetch('{% url "admin:fleet-optimizer-driver-plan" %}', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+                    body: JSON.stringify({trip_ids: button.dataset.tripIds.split(',')})
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Plan indisponibil');
+                const plan = data.plan;
+                activeDriverPlanToken = plan.token;
+                const list = document.getElementById('fleet-driver-assignment-list');
+                list.replaceChildren(...plan.assignments.map(assignment => {
+                    const row = document.createElement('article');
+                    row.className = `fleet-driver-assignment${assignment.changed ? ' is-changed' : ''}`;
+                    const currentName = assignment.current_driver ? assignment.current_driver.name : 'Fără șofer';
+                    const tripDetails = document.createElement('div');
+                    const tripLabel = document.createElement('span');
+                    const routeName = document.createElement('strong');
+                    const scheduleDetails = document.createElement('small');
+                    tripLabel.textContent = `Cursa #${assignment.trip_id}`;
+                    routeName.textContent = assignment.route;
+                    scheduleDetails.textContent = `${assignment.date} · ${assignment.departure_time} · ${assignment.duration_hours}h`;
+                    tripDetails.append(tripLabel, routeName, scheduleDetails);
+
+                    const driverMove = document.createElement('div');
+                    driverMove.className = 'fleet-driver-move';
+                    const currentDriver = document.createElement('span');
+                    const arrow = document.createElement('b');
+                    const recommendedDriver = document.createElement('strong');
+                    currentDriver.textContent = currentName;
+                    arrow.textContent = '→';
+                    recommendedDriver.textContent = assignment.recommended_driver.name;
+                    driverMove.append(currentDriver, arrow, recommendedDriver);
+                    row.append(tripDetails, driverMove);
+                    return row;
+                }));
+                document.getElementById('driver-plan-rationale').textContent = plan.rationale;
+                const sourceLabel = plan.source === 'ai'
+                    ? `Plan creat de agentul AI ${plan.model} · încercarea ${plan.attempts}`
+                    : `Fallback: ${plan.model}`;
+                document.getElementById('driver-plan-model').textContent = `${sourceLabel} · ${plan.changed_count} schimbări`;
+                driverPlanPanel.hidden = false;
+                driverPlanPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
+            } catch (error) {
+                window.alert(error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        });
+    });
+
+    document.getElementById('fleet-close-driver-plan').addEventListener('click', () => {
+        driverPlanPanel.hidden = true;
+        activeDriverPlanToken = null;
+    });
+
+    applyDriverPlanButton.addEventListener('click', async () => {
+        if (!activeDriverPlanToken) return;
+        if (!window.confirm('Confirmi distribuția propusă pentru toate cursele afișate?')) return;
+        applyDriverPlanButton.disabled = true;
+        applyDriverPlanButton.textContent = 'Aplic distribuția...';
+        try {
+            const response = await fetch('{% url "admin:fleet-optimizer-driver-apply" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+                body: JSON.stringify({token: activeDriverPlanToken})
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.error || 'Distribuția nu a putut fi aplicată');
+            driverPlanStatus.textContent = data.message;
+            driverPlanStatus.className = 'fleet-plan-status is-success';
+            activeDriverPlanToken = null;
+            setTimeout(() => window.location.reload(), 1800);
+        } catch (error) {
+            driverPlanStatus.textContent = error.message;
+            driverPlanStatus.className = 'fleet-plan-status is-error';
+        } finally {
+            applyDriverPlanButton.disabled = false;
+            applyDriverPlanButton.textContent = 'Confirmă și aplică distribuția';
+        }
+    });
+
+    applyPlanButton.addEventListener('click', async () => {
+        if (!activePlanToken) return;
+        if (!window.confirm('Confirmi mutarea biletelor și anularea cursei redundante?')) return;
+        applyPlanButton.disabled = true;
+        applyPlanButton.textContent = 'Aplic schimbarea...';
+        try {
+            const response = await fetch('{% url "admin:fleet-optimizer-apply" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+                body: JSON.stringify({token: activePlanToken})
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.error || 'Schimbarea nu a putut fi aplicată');
+            planStatus.textContent = data.message;
+            planStatus.className = 'fleet-plan-status is-success';
+            activePlanToken = null;
+            setTimeout(() => window.location.reload(), 1800);
+        } catch (error) {
+            planStatus.textContent = error.message;
+            planStatus.className = 'fleet-plan-status is-error';
+        } finally {
+            applyPlanButton.disabled = false;
+            applyPlanButton.textContent = 'Confirmă și aplică schimbarea';
+        }
+    });
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!question.value.trim()) return;
+        submit.disabled = true;
+        submit.textContent = 'Analizez...';
+        answer.textContent = 'Mistral analizează datele operaționale...';
+        try {
+            const response = await fetch('{% url "admin:fleet-optimizer-chat" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value},
+                body: JSON.stringify({question: question.value.trim()})
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.error || 'Răspuns indisponibil');
+            answer.textContent = data.answer;
+            answer.dataset.model = data.fallback ? 'Analiză deterministă' : data.model;
+        } catch (error) {
+            answer.textContent = error.message;
+        } finally {
+            submit.disabled = false;
+            submit.textContent = 'Analizează cu Mistral';
+        }
+    });
+</script>
+{% endblock %}

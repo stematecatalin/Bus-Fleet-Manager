@@ -40,7 +40,6 @@ import hashlib
 from django.conf import settings
 from .forms import ContactForm
 from .chatbot import build_assistant_response
-
 def contact(request):
     if request.method == "POST":
         form = ContactForm(request.POST)
@@ -139,7 +138,7 @@ def generate_ticket_pdf(request, ticket_id):
         canvas_obj.drawString(x_start + 10*mm, y_start + t_height - 73*mm, f"SOSIRE ({arr_time.strftime('%H:%M')})")
         canvas_obj.setFillColor(colors.black)
         canvas_obj.setFont(FONT_BOLD, 11)
-        canvas_obj.drawString(x_start + 10*mm, y_start + t_height - 79*mm, arr_name)
+        canvas_obj.drawString(x_start + 10*mm, y_start + t_height - 61*mm, arr_name)
 
         # Dată și Cursă
         canvas_obj.setFont(FONT_NAME, 8)
