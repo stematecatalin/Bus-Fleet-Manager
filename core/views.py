@@ -74,6 +74,28 @@ def generate_ticket_pdf(request, ticket_id):
 
     SITE_GREEN = colors.HexColor("#198754")
 
+    def wrap_pdf_text(text, font_name, font_size, max_width):
+        words = str(text).split()
+        lines = []
+        current = ""
+        for word in words:
+            candidate = f"{current} {word}".strip()
+            if pdfmetrics.stringWidth(candidate, font_name, font_size) <= max_width:
+                current = candidate
+            else:
+                if current:
+                    lines.append(current)
+                current = word
+        if current:
+            lines.append(current)
+        return lines or ["---"]
+
+    def draw_wrapped_text(canvas_obj, text, x, y, max_width, font_name, font_size, line_height):
+        canvas_obj.setFont(font_name, font_size)
+        for index, line in enumerate(wrap_pdf_text(text, font_name, font_size, max_width)):
+            canvas_obj.drawString(x, y - index * line_height, line)
+        return y - max(0, len(wrap_pdf_text(text, font_name, font_size, max_width)) - 1) * line_height
+
     def draw_single_ticket(canvas_obj, ticket, y_offset):
         security_token = f"{ticket.id}-{ticket.passenger_name}-{ticket.trip.id}-{settings.SECRET_KEY}"
         signature = hashlib.sha256(security_token.encode()).hexdigest()[:12].upper()
@@ -126,19 +148,40 @@ def generate_ticket_pdf(request, ticket_id):
         dep_time = start_dt + (start_rs.time_from_start if start_rs else timedelta(0))
         arr_time = start_dt + (end_rs.time_from_start if end_rs else route.duration)
 
-        canvas_obj.setFont(FONT_NAME, 8)
-        canvas_obj.setFillColor(colors.grey)
-        canvas_obj.drawString(x_start + 10*mm, y_start + t_height - 55*mm, f"PLECARE ({dep_time.strftime('%H:%M')})")
-        canvas_obj.setFillColor(colors.black)
-        canvas_obj.setFont(FONT_BOLD, 11)
-        canvas_obj.drawString(x_start + 10*mm, y_start + t_height - 61*mm, dep_name)
+        station_x = x_start + 10*mm
+        station_width = 112*mm
+        station_line_height = 5*mm
 
         canvas_obj.setFont(FONT_NAME, 8)
         canvas_obj.setFillColor(colors.grey)
-        canvas_obj.drawString(x_start + 10*mm, y_start + t_height - 73*mm, f"SOSIRE ({arr_time.strftime('%H:%M')})")
+        canvas_obj.drawString(station_x, y_start + t_height - 55*mm, f"PLECARE ({dep_time.strftime('%H:%M')})")
         canvas_obj.setFillColor(colors.black)
-        canvas_obj.setFont(FONT_BOLD, 11)
-        canvas_obj.drawString(x_start + 10*mm, y_start + t_height - 61*mm, arr_name)
+        dep_last_y = draw_wrapped_text(
+            canvas_obj,
+            dep_name,
+            station_x,
+            y_start + t_height - 61*mm,
+            station_width,
+            FONT_BOLD,
+            11,
+            station_line_height,
+        )
+
+        canvas_obj.setFont(FONT_NAME, 8)
+        canvas_obj.setFillColor(colors.grey)
+        arrival_label_y = min(y_start + t_height - 76*mm, dep_last_y - 8*mm)
+        canvas_obj.drawString(station_x, arrival_label_y, f"SOSIRE ({arr_time.strftime('%H:%M')})")
+        canvas_obj.setFillColor(colors.black)
+        draw_wrapped_text(
+            canvas_obj,
+            arr_name,
+            station_x,
+            arrival_label_y - 6*mm,
+            station_width,
+            FONT_BOLD,
+            11,
+            station_line_height,
+        )
 
         # Dată și Cursă
         canvas_obj.setFont(FONT_NAME, 8)

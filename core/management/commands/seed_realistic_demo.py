@@ -27,22 +27,33 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--admin-email", default="admin@autotrans.ro")
+        parser.add_argument("--admin-password", default="adminpassword")
+        parser.add_argument("--driver-password", default="soferpassword")
         parser.add_argument("--days", type=int, default=14)
 
     @transaction.atomic
     def handle(self, *args, **options):
         admin_email = options["admin_email"]
         days = max(7, min(options["days"], 31))
-        try:
-            admin_user = User.objects.get(email=admin_email, is_staff=True)
-        except User.DoesNotExist as exc:
-            raise CommandError(f"Nu există utilizatorul staff {admin_email}.") from exc
+        admin_user, _ = User.objects.get_or_create(
+            email=admin_email,
+            defaults={
+                "first_name": "Admin",
+                "last_name": "AutoTrans",
+                "phone_number": "0700000000",
+            },
+        )
+
+        admin_user.set_password(options["admin_password"])
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save(update_fields=["password", "is_staff", "is_superuser"])
 
         self._clear_operational_data(admin_user)
         stations = self._create_stations()
         routes = self._create_routes(stations)
         buses = self._create_buses()
-        drivers = self._create_drivers()
+        drivers = self._create_drivers(options["driver_password"])
         trips = self._create_trips(routes, buses, drivers, days)
         self._create_tickets(trips, admin_user)
         scenarios = self._inject_agent_scenarios(trips, buses, drivers)
@@ -174,7 +185,7 @@ class Command(BaseCommand):
             for vin, brand, model, plate, capacity, status in specs
         ]
 
-    def _create_drivers(self):
+    def _create_drivers(self, driver_password):
         names = [
             ("Andrei", "Popescu", 4.9), ("Mihai", "Ionescu", 4.8),
             ("Cristian", "Dumitru", 4.7), ("Sorin", "Marin", 4.6),
@@ -187,7 +198,7 @@ class Command(BaseCommand):
         for index, (first_name, last_name, rating) in enumerate(names, start=1):
             user = User.objects.create_user(
                 email=f"sofer{index}@autotrans.demo",
-                password=None,
+                password=driver_password,
                 first_name=first_name,
                 last_name=last_name,
                 phone_number=f"0720{index:06d}",
@@ -310,7 +321,9 @@ class Command(BaseCommand):
 
         scenarios = []
         service_bus = next(bus for bus in buses if bus.status == "service")
-        unavailable_driver = next(driver for driver in drivers if driver.status == "vacation")
+        defective_bus = next(bus for bus in buses if bus.status == "defective")
+        vacation_driver = next(driver for driver in drivers if driver.status == "vacation")
+        medical_driver = next(driver for driver in drivers if driver.status == "medical_leave")
 
         service_trip = by_date[dates[0]][-1]
         service_trip.bus = service_bus
@@ -318,9 +331,9 @@ class Command(BaseCommand):
         scenarios.append(f"autobuz în service pe cursa #{service_trip.id}")
 
         missing_bus_trip = by_date[dates[1]][-1]
-        missing_bus_trip.bus = None
+        missing_bus_trip.bus = defective_bus
         missing_bus_trip.save(update_fields=["bus"])
-        scenarios.append(f"autobuz lipsă pe cursa #{missing_bus_trip.id}")
+        scenarios.append(f"autobuz defect pe cursa #{missing_bus_trip.id}")
 
         overlap_candidates = by_date[dates[2]][:]
         conflict_pair = self._first_overlapping_pair(overlap_candidates)
@@ -331,14 +344,14 @@ class Command(BaseCommand):
         )
 
         unavailable_driver_trip = by_date[dates[0]][-2]
-        unavailable_driver_trip.driver = unavailable_driver
+        unavailable_driver_trip.driver = vacation_driver
         unavailable_driver_trip.save(update_fields=["driver"])
         scenarios.append(f"șofer în concediu pe cursa #{unavailable_driver_trip.id}")
 
         missing_driver_trip = by_date[dates[1]][-2]
-        missing_driver_trip.driver = None
+        missing_driver_trip.driver = medical_driver
         missing_driver_trip.save(update_fields=["driver"])
-        scenarios.append(f"șofer lipsă pe cursa #{missing_driver_trip.id}")
+        scenarios.append(f"șofer în concediu medical pe cursa #{missing_driver_trip.id}")
 
         driver_conflict_trips = self._overlapping_group(by_date[dates[3]], size=3)
         conflict_driver = drivers[0]

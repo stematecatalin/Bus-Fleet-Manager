@@ -918,7 +918,43 @@
 
 /* Mobile navbar layout must override Bootstrap dropdown positioning. */
 @media (max-width: 991.98px) {
+    .autotrans-navbar .container {
+        gap: 10px;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
+
+    .autotrans-navbar .navbar-brand {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .autotrans-navbar .brand-icon {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        font-size: 1.1rem;
+    }
+
+    .autotrans-navbar .brand-copy {
+        min-width: 0;
+    }
+
+    .autotrans-navbar .brand-text-new {
+        display: block;
+        overflow: hidden;
+        max-width: 155px;
+        font-size: 1.02rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .autotrans-navbar .brand-copy small {
+        display: none;
+    }
+
     .autotrans-navbar .navbar-toggler {
+        flex: 0 0 43px;
         width: 43px;
         height: 43px;
         padding: 8px;
@@ -931,7 +967,7 @@
         top: 0 !important;
         bottom: 0 !important;
         z-index: 10050 !important;
-        width: min(88vw, 340px) !important;
+        width: min(92vw, 360px) !important;
         height: 100dvh !important;
         color: white;
         background: linear-gradient(160deg, #061d0d 0%, #0a3217 100%) !important;
@@ -952,6 +988,7 @@
     }
 
     .autotrans-offcanvas .offcanvas-header {
+        flex: 0 0 auto;
         padding: 18px 18px 14px;
     }
 
@@ -961,7 +998,10 @@
     }
 
     .autotrans-offcanvas .offcanvas-body {
+        display: flex !important;
+        flex-direction: column !important;
         flex: 1 1 auto;
+        gap: 14px;
         min-height: 0;
         padding: 14px;
         overflow-y: auto;
@@ -969,6 +1009,10 @@
     }
 
     .autotrans-offcanvas .navbar-main-links {
+        order: 1 !important;
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
         width: 100%;
         gap: 6px;
         margin: 0 !important;
@@ -986,16 +1030,36 @@
     }
 
     .autotrans-offcanvas .login-btn {
+        order: 2 !important;
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
         width: 100%;
-        margin-top: 22px !important;
+        margin: 0 !important;
         padding-top: 14px;
         border-top: 1px solid rgba(255,255,255,.1);
+        transform: none !important;
     }
 
     .autotrans-offcanvas .account-dropdown,
     .autotrans-offcanvas .account-trigger,
     .autotrans-offcanvas .navbar-login-link {
         width: 100%;
+    }
+
+    .autotrans-offcanvas .account-dropdown {
+        display: none !important;
+    }
+
+    .autotrans-offcanvas .mobile-account-panel {
+        display: block !important;
+        flex: 0 0 auto;
+    }
+
+    .autotrans-offcanvas .navbar-login-link {
+        justify-content: center;
+        min-height: 48px;
+        border-radius: 14px;
     }
 
     .autotrans-offcanvas .account-trigger {
@@ -1339,8 +1403,8 @@
         padding: 12px 14px !important;
     }
 
-    .account-trigger,
-    .navbar-login-link {
+    .autotrans-offcanvas .account-trigger,
+    .autotrans-offcanvas .navbar-login-link {
         width: 100%;
     }
 }
@@ -4696,3 +4760,304 @@ a.contact-detail-item:hover {
 .fleet-agent-disclaimer { display: flex; align-items: flex-start; gap: .4rem; margin-top: .85rem; color: #748981; font-size: .82rem; line-height: 1.4; }
 @media (max-width: 991.98px) { .fleet-agent-hero { align-items: flex-start; flex-direction: column; }.fleet-agent-stats { grid-template-columns: repeat(2,1fr); }.fleet-agent-layout { grid-template-columns: 1fr; }.fleet-agent-chat-card { position: static; grid-row: 1; } }
 @media (max-width: 575.98px) { .fleet-agent-hero { padding: 1.4rem; }.fleet-agent-stats { grid-template-columns: 1fr; }.fleet-agent-card,.fleet-agent-chat-card { padding: 1.05rem; }.fleet-agent-section-heading { align-items: flex-start; flex-direction: column; }.fleet-agent-severity-counts { justify-content: flex-start; }.fleet-agent-trip { grid-template-columns: 4.2rem minmax(0,1fr); }.fleet-agent-trip-resource,.fleet-agent-occupancy { grid-column: 2; text-align: left; }.fleet-agent-issue-title { align-items: flex-start; flex-direction: column; gap: .2rem; } }
+
+/* Final mobile offcanvas guard: keep the menu usable on mobile browsers. */
+@media (max-width: 991.98px) {
+    .autotrans-offcanvas.offcanvas,
+    .autotrans-offcanvas.offcanvas-end {
+        position: fixed !important;
+        inset: 0 !important;
+        right: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        color: #fff !important;
+        background:
+            radial-gradient(circle at 92% 12%, rgba(138, 238, 153, .16), transparent 30%),
+            linear-gradient(160deg, #041609 0%, #082d14 52%, #041a0b 100%) !important;
+        border: 0 !important;
+        transform: translateX(100%) !important;
+        visibility: visible !important;
+    }
+
+    .autotrans-offcanvas.offcanvas.show,
+    .autotrans-offcanvas.offcanvas-end.show {
+        transform: translateX(0) !important;
+    }
+
+    .autotrans-offcanvas .offcanvas-header {
+        width: 100% !important;
+        min-height: 76px;
+        padding: 20px 22px !important;
+    }
+
+    .autotrans-offcanvas .btn-close {
+        margin-left: auto !important;
+    }
+
+    .autotrans-offcanvas .offcanvas-body {
+        width: 100% !important;
+        padding: 18px 22px 24px !important;
+    }
+
+    .autotrans-offcanvas .navbar-main-links {
+        width: 100% !important;
+    }
+
+    .autotrans-offcanvas .navbar-main-links .nav-link {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        min-height: 58px !important;
+        margin: 0 !important;
+        padding: 14px 16px !important;
+        border: 1px solid rgba(255, 255, 255, .1) !important;
+        border-radius: 16px !important;
+        color: rgba(255, 255, 255, .88) !important;
+        background: rgba(255, 255, 255, .065) !important;
+        transform: none !important;
+    }
+
+    .autotrans-offcanvas .navbar-main-links .nav-link span {
+        display: inline !important;
+        overflow: visible !important;
+        color: inherit !important;
+        font-size: .98rem !important;
+        white-space: nowrap !important;
+    }
+
+    .autotrans-offcanvas .navbar-main-links .nav-link i {
+        width: 34px !important;
+        font-size: 1.25rem !important;
+        text-align: center !important;
+    }
+
+    .autotrans-offcanvas .login-btn {
+        width: 100% !important;
+        margin-top: 6px !important;
+    }
+
+    .autotrans-offcanvas .mobile-account-panel,
+    .autotrans-offcanvas .navbar-login-link {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Custom navbar panel, independent from Bootstrap offcanvas. */
+.autotrans-nav-panel {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.autotrans-nav-panel .offcanvas-header {
+    display: none;
+}
+
+.autotrans-nav-panel .offcanvas-body {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    overflow: visible !important;
+}
+
+.autotrans-nav-panel .login-btn,
+.autotrans-nav-panel .account-dropdown,
+.autotrans-nav-panel .account-trigger {
+    overflow: visible !important;
+}
+
+@media (min-width: 992px) {
+    .autotrans-menu-toggle {
+        display: none !important;
+    }
+
+    .autotrans-nav-panel {
+        position: static;
+        flex-direction: row;
+        align-items: center;
+        visibility: visible;
+        transform: none;
+    }
+
+    .autotrans-nav-panel .offcanvas-body {
+        flex-direction: row !important;
+        align-items: center;
+        overflow: visible !important;
+    }
+
+    .autotrans-nav-panel .login-btn {
+        flex-direction: row !important;
+        align-items: center;
+        width: auto !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        overflow: visible !important;
+        border-top: 0 !important;
+        max-height: none !important;
+    }
+
+    .autotrans-nav-panel .account-dropdown,
+    .autotrans-nav-panel .account-trigger,
+    .autotrans-nav-panel .account-menu {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    body.mobile-menu-open {
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    .autotrans-nav-panel {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 10050 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        color: #fff !important;
+        background:
+            radial-gradient(circle at 92% 10%, rgba(123, 230, 139, .16), transparent 32%),
+            linear-gradient(160deg, #041609 0%, #082d14 54%, #041a0b 100%) !important;
+        box-shadow: none !important;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(100%) !important;
+        transition: transform .26s ease, opacity .18s ease;
+    }
+
+    body.mobile-menu-open .autotrans-nav-panel {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(0) !important;
+    }
+
+    .autotrans-nav-panel .offcanvas-header {
+        display: flex !important;
+        align-items: center;
+        flex: 0 0 auto;
+        min-height: 76px;
+        width: 100%;
+        padding: 20px 22px !important;
+        border-color: rgba(255, 255, 255, .1) !important;
+    }
+
+    .autotrans-nav-panel .offcanvas-title {
+        margin: 0;
+        font-size: .9rem;
+        letter-spacing: .22em;
+    }
+
+    .autotrans-nav-panel .btn-close {
+        margin-left: auto !important;
+    }
+
+    .autotrans-nav-panel .offcanvas-body {
+        display: flex !important;
+        flex: 1 1 auto;
+        flex-direction: column !important;
+        gap: 16px;
+        min-height: 0;
+        width: 100%;
+        padding: 20px 22px 26px !important;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .autotrans-nav-panel .navbar-main-links {
+        order: 1 !important;
+        display: grid !important;
+        grid-template-columns: 1fr;
+        flex: 0 0 auto;
+        gap: 10px;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .autotrans-nav-panel .navbar-main-links .nav-link {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        min-height: 64px !important;
+        margin: 0 !important;
+        padding: 15px 17px !important;
+        border: 1px solid rgba(255, 255, 255, .12) !important;
+        border-radius: 18px !important;
+        color: rgba(255, 255, 255, .9) !important;
+        background: rgba(255, 255, 255, .07) !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    .autotrans-nav-panel .navbar-main-links .nav-link.active {
+        border-color: rgba(129, 235, 146, .36) !important;
+        background: rgba(105, 212, 122, .17) !important;
+        box-shadow: inset 4px 0 0 #81eb92 !important;
+    }
+
+    .autotrans-nav-panel .navbar-main-links .nav-link i {
+        width: 38px !important;
+        flex: 0 0 38px;
+        font-size: 1.35rem !important;
+        text-align: center;
+    }
+
+    .autotrans-nav-panel .navbar-main-links .nav-link span {
+        display: inline !important;
+        overflow: visible !important;
+        color: inherit !important;
+        font-size: 1.05rem !important;
+        font-weight: 800;
+        white-space: nowrap !important;
+    }
+
+    .autotrans-nav-panel .login-btn {
+        order: 2 !important;
+        display: flex !important;
+        flex: 0 0 auto;
+        flex-direction: column;
+        width: 100% !important;
+        margin: 4px 0 0 !important;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+        transform: none !important;
+    }
+
+    .autotrans-nav-panel .account-dropdown {
+        display: none !important;
+    }
+
+    .autotrans-nav-panel .mobile-account-panel,
+    .autotrans-nav-panel .navbar-login-link {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .autotrans-nav-panel .navbar-login-link {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        border-radius: 18px;
+        color: #fff;
+    }
+}

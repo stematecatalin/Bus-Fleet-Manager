@@ -38,6 +38,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.serveo.net',
     'https://*.ngrok-free.app',
     'https://*.trycloudflare.com',
+    'https://desktop-1onegm4.tailb4675e.ts.net',
 ]
 
 
