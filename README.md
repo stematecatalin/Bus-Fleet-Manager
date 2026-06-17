@@ -150,8 +150,12 @@ Dacă folosești alt model, actualizează numele modelului în configurația cha
 Pentru testare realistă, proiectul include o comandă de populare:
 
 ```bash
-python manage.py seed_realistic_demo --admin-email admin@autotrans.ro --days 14
+python manage.py migrate
+python manage.py seed_realistic_demo --admin-email admin@autotrans.ro --admin-password adminpassword --driver-password soferpassword --days 14
 ```
+
+Repository-ul conține codul și comanda de generare, nu baza de date locală `db.sqlite3`.
+După `clone` sau `pull`, fiecare membru al echipei trebuie să ruleze comenzile de mai sus pentru a reconstrui aceleași date demo.
 
 Comanda creează:
 
@@ -163,6 +167,11 @@ Comanda creează:
 - curse
 - bilete
 - scenarii realiste pentru agentul AI de management
+
+Conturi demo:
+
+- administrator: `admin@autotrans.ro` / `adminpassword`
+- șoferi: `sofer1@autotrans.demo` ... `sofer10@autotrans.demo` / `soferpassword`
 
 ## Rulare aplicație
 
